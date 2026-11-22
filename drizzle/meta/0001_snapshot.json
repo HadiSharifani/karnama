@@ -1,0 +1,711 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "15061973-f77f-4f6e-aa46-cddc2c884910",
+  "prevId": "c81b0181-8c0c-4e67-be2e-076735ad0ea6",
+  "tables": {
+    "app_metadata": {
+      "name": "app_metadata",
+      "columns": {
+        "key": {
+          "name": "key",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "value": {
+          "name": "value",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "app_settings": {
+      "name": "app_settings",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "daily_commitment_minutes": {
+          "name": "daily_commitment_minutes",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 480
+        },
+        "working_weekdays_json": {
+          "name": "working_weekdays_json",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'[6,7,1,2,3,4]'"
+        },
+        "weekly_holiday_iso_day": {
+          "name": "weekly_holiday_iso_day",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 5
+        },
+        "work_date_boundary_minutes": {
+          "name": "work_date_boundary_minutes",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 360
+        },
+        "calendar": {
+          "name": "calendar",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'jalali'"
+        },
+        "theme": {
+          "name": "theme",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'system'"
+        },
+        "timezone_id": {
+          "name": "timezone_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "onboarding_completed_at": {
+          "name": "onboarding_completed_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "app_settings_singleton_check": {
+          "name": "app_settings_singleton_check",
+          "value": "\"app_settings\".\"id\" = 1"
+        },
+        "app_settings_daily_commitment_check": {
+          "name": "app_settings_daily_commitment_check",
+          "value": "\"app_settings\".\"daily_commitment_minutes\" BETWEEN 15 AND 1440"
+        },
+        "app_settings_weekday_check": {
+          "name": "app_settings_weekday_check",
+          "value": "\"app_settings\".\"weekly_holiday_iso_day\" BETWEEN 1 AND 7"
+        },
+        "app_settings_boundary_check": {
+          "name": "app_settings_boundary_check",
+          "value": "\"app_settings\".\"work_date_boundary_minutes\" BETWEEN 0 AND 1439"
+        }
+      }
+    },
+    "tasks": {
+      "name": "tasks",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "''"
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "''"
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'todo'"
+        },
+        "priority": {
+          "name": "priority",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'medium'"
+        },
+        "estimated_duration_minutes": {
+          "name": "estimated_duration_minutes",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at_utc_ms": {
+          "name": "created_at_utc_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at_utc_ms": {
+          "name": "updated_at_utc_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "completed_at_utc_ms": {
+          "name": "completed_at_utc_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "archived_at_utc_ms": {
+          "name": "archived_at_utc_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "tasks_archive_updated_idx": {
+          "name": "tasks_archive_updated_idx",
+          "columns": [
+            "archived_at_utc_ms",
+            "updated_at_utc_ms"
+          ],
+          "isUnique": false
+        },
+        "tasks_status_idx": {
+          "name": "tasks_status_idx",
+          "columns": [
+            "status"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "tasks_status_check": {
+          "name": "tasks_status_check",
+          "value": "\"tasks\".\"status\" IN ('todo', 'in_progress', 'waiting_feedback', 'on_hold', 'done')"
+        },
+        "tasks_priority_check": {
+          "name": "tasks_priority_check",
+          "value": "\"tasks\".\"priority\" IN ('low', 'medium', 'high')"
+        },
+        "tasks_estimated_duration_check": {
+          "name": "tasks_estimated_duration_check",
+          "value": "\"tasks\".\"estimated_duration_minutes\" IS NULL OR \"tasks\".\"estimated_duration_minutes\" BETWEEN 1 AND 1000000"
+        }
+      }
+    },
+    "timer_runs": {
+      "name": "timer_runs",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "task_id": {
+          "name": "task_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'running'"
+        },
+        "started_at_utc_ms": {
+          "name": "started_at_utc_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "current_segment_started_at_utc_ms": {
+          "name": "current_segment_started_at_utc_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "checkpoint_at_utc_ms": {
+          "name": "checkpoint_at_utc_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "time_zone_id": {
+          "name": "time_zone_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "work_date_boundary_minutes": {
+          "name": "work_date_boundary_minutes",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "recovery_start_utc_ms": {
+          "name": "recovery_start_utc_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "recovery_end_utc_ms": {
+          "name": "recovery_end_utc_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "recovery_reviewed_at_utc_ms": {
+          "name": "recovery_reviewed_at_utc_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at_utc_ms": {
+          "name": "created_at_utc_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at_utc_ms": {
+          "name": "updated_at_utc_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "timer_one_running_idx": {
+          "name": "timer_one_running_idx",
+          "columns": [
+            "status"
+          ],
+          "isUnique": true,
+          "where": "\"timer_runs\".\"status\" = 'running'"
+        },
+        "timer_runs_status_updated_idx": {
+          "name": "timer_runs_status_updated_idx",
+          "columns": [
+            "status",
+            "updated_at_utc_ms"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "timer_runs_task_id_tasks_id_fk": {
+          "name": "timer_runs_task_id_tasks_id_fk",
+          "tableFrom": "timer_runs",
+          "tableTo": "tasks",
+          "columnsFrom": [
+            "task_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "timer_runs_status_check": {
+          "name": "timer_runs_status_check",
+          "value": "\"timer_runs\".\"status\" IN ('running', 'paused', 'stopped')"
+        },
+        "timer_runs_boundary_check": {
+          "name": "timer_runs_boundary_check",
+          "value": "\"timer_runs\".\"work_date_boundary_minutes\" BETWEEN 0 AND 1439"
+        },
+        "timer_runs_recovery_range_check": {
+          "name": "timer_runs_recovery_range_check",
+          "value": "\"timer_runs\".\"recovery_start_utc_ms\" IS NULL OR (\"timer_runs\".\"recovery_end_utc_ms\" IS NOT NULL AND \"timer_runs\".\"recovery_end_utc_ms\" >= \"timer_runs\".\"recovery_start_utc_ms\")"
+        }
+      }
+    },
+    "user_profile": {
+      "name": "user_profile",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "''"
+        },
+        "job_title": {
+          "name": "job_title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'Product Designer'"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "work_date_allocations": {
+      "name": "work_date_allocations",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "session_id": {
+          "name": "session_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "segment_index": {
+          "name": "segment_index",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "start_utc_ms": {
+          "name": "start_utc_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "end_utc_ms": {
+          "name": "end_utc_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "work_date": {
+          "name": "work_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source": {
+          "name": "source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "work_date_allocation_session_segment_idx": {
+          "name": "work_date_allocation_session_segment_idx",
+          "columns": [
+            "session_id",
+            "segment_index"
+          ],
+          "isUnique": true
+        },
+        "work_date_allocations_date_idx": {
+          "name": "work_date_allocations_date_idx",
+          "columns": [
+            "work_date"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "work_date_allocations_session_id_work_sessions_id_fk": {
+          "name": "work_date_allocations_session_id_work_sessions_id_fk",
+          "tableFrom": "work_date_allocations",
+          "tableTo": "work_sessions",
+          "columnsFrom": [
+            "session_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "work_date_allocation_range_check": {
+          "name": "work_date_allocation_range_check",
+          "value": "\"work_date_allocations\".\"end_utc_ms\" > \"work_date_allocations\".\"start_utc_ms\""
+        },
+        "work_date_allocation_segment_check": {
+          "name": "work_date_allocation_segment_check",
+          "value": "\"work_date_allocations\".\"segment_index\" >= 0"
+        }
+      }
+    },
+    "work_sessions": {
+      "name": "work_sessions",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "task_id": {
+          "name": "task_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "timer_run_id": {
+          "name": "timer_run_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "source": {
+          "name": "source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "start_utc_ms": {
+          "name": "start_utc_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "end_utc_ms": {
+          "name": "end_utc_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "time_zone_id": {
+          "name": "time_zone_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "work_date_boundary_minutes": {
+          "name": "work_date_boundary_minutes",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "allocation_mode": {
+          "name": "allocation_mode",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'boundary'"
+        },
+        "created_at_utc_ms": {
+          "name": "created_at_utc_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at_utc_ms": {
+          "name": "updated_at_utc_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "work_sessions_range_idx": {
+          "name": "work_sessions_range_idx",
+          "columns": [
+            "start_utc_ms",
+            "end_utc_ms"
+          ],
+          "isUnique": false
+        },
+        "work_sessions_task_start_idx": {
+          "name": "work_sessions_task_start_idx",
+          "columns": [
+            "task_id",
+            "start_utc_ms"
+          ],
+          "isUnique": false
+        },
+        "work_sessions_timer_run_idx": {
+          "name": "work_sessions_timer_run_idx",
+          "columns": [
+            "timer_run_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "work_sessions_task_id_tasks_id_fk": {
+          "name": "work_sessions_task_id_tasks_id_fk",
+          "tableFrom": "work_sessions",
+          "tableTo": "tasks",
+          "columnsFrom": [
+            "task_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "work_sessions_timer_run_id_timer_runs_id_fk": {
+          "name": "work_sessions_timer_run_id_timer_runs_id_fk",
+          "tableFrom": "work_sessions",
+          "tableTo": "timer_runs",
+          "columnsFrom": [
+            "timer_run_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "work_sessions_time_check": {
+          "name": "work_sessions_time_check",
+          "value": "\"work_sessions\".\"end_utc_ms\" > \"work_sessions\".\"start_utc_ms\""
+        },
+        "work_sessions_boundary_check": {
+          "name": "work_sessions_boundary_check",
+          "value": "\"work_sessions\".\"work_date_boundary_minutes\" BETWEEN 0 AND 1439"
+        }
+      }
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}

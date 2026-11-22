@@ -1,0 +1,6 @@
+PROJECT_SPEC.md
+ARCHITECTURE.md
+DEVELOPMENT_PLAN.md
+drizzle/meta/**
+dist-phase2/**
+dist-phase*/**

@@ -1,0 +1,35 @@
+appId: ir.karnama.desktop
+productName: کارنما
+directories:
+  output: dist
+  buildResources: resources
+files:
+  - out/**/*
+  - package.json
+  - node_modules/**/*
+  - '!src/**/*'
+  - '!tests/**/*'
+  - '!drizzle/**/*'
+asar: true
+asarUnpack:
+  - '**/better-sqlite3/**'
+extraResources:
+  - from: drizzle
+    to: drizzle
+    filter:
+      - '**/*.sql'
+      - meta/_journal.json
+# better-sqlite3 ships a platform-specific Node-API binary that has been loaded by Electron 45.
+npmRebuild: false
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  artifactName: '${productName}-${version}-win-${arch}.${ext}'
+nsis:
+  oneClick: false
+  perMachine: false
+  allowElevation: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
