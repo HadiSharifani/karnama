@@ -309,7 +309,7 @@ test('installed Windows UI restores tasks, Work Dates, links, images and setting
     )
     expect(sessionIds).toHaveLength(2)
 
-    await page.getByRole('button', { name: new RegExp(tasks[0].title) }).click()
+    await page.getByRole('button', { name: new RegExp(`^${tasks[0].title}`) }).click()
     await page.getByRole('button', { name: 'افزودن لینک' }).click()
     await page.getByLabel('عنوان لینک').fill('Alpha design source')
     await page.getByLabel('نشانی لینک').fill('https://example.invalid/phase6-alpha')
@@ -317,7 +317,7 @@ test('installed Windows UI restores tasks, Work Dates, links, images and setting
     await page.getByRole('button', { name: 'ذخیره لینک' }).click()
     await expect(page.getByText('Alpha design source', { exact: true })).toBeVisible()
 
-    await page.getByRole('button', { name: new RegExp(tasks[1].title) }).click()
+    await page.getByRole('button', { name: new RegExp(`^${tasks[1].title}`) }).click()
     await page.getByRole('button', { name: 'افزودن لینک' }).click()
     await page.getByLabel('عنوان لینک').fill('Beta reference')
     await page.getByLabel('نشانی لینک').fill('https://example.invalid/phase6-beta')
@@ -325,7 +325,7 @@ test('installed Windows UI restores tasks, Work Dates, links, images and setting
     await page.getByRole('button', { name: 'ذخیره لینک' }).click()
     await expect(page.getByText('Beta reference', { exact: true })).toBeVisible()
 
-    await page.getByRole('button', { name: new RegExp(tasks[0].title) }).click()
+    await page.getByRole('button', { name: new RegExp(`^${tasks[0].title}`) }).click()
     const imageDirectory = join(profileRoot, 'source-images')
     mkdirSync(imageDirectory, { recursive: true })
     const pngDataUrls = await page.evaluate(() =>
@@ -509,12 +509,12 @@ test('installed Windows UI restores tasks, Work Dates, links, images and setting
     expect(restoredSnapshot).toEqual(originalSnapshot)
     await restoredPage!.getByRole('button', { name: 'تسک‌ها', exact: true }).click()
     await expect(
-      restoredPage!.getByRole('button', { name: new RegExp(tasks[0].title) })
+      restoredPage!.getByRole('button', { name: new RegExp(`^${tasks[0].title}`) })
     ).toBeVisible()
     await expect(
-      restoredPage!.getByRole('button', { name: new RegExp(tasks[1].title) })
+      restoredPage!.getByRole('button', { name: new RegExp(`^${tasks[1].title}`) })
     ).toBeVisible()
-    await restoredPage!.getByRole('button', { name: new RegExp(tasks[0].title) }).click()
+    await restoredPage!.getByRole('button', { name: new RegExp(`^${tasks[0].title}`) }).click()
     await expect(restoredPage!.getByText('Alpha design source', { exact: true })).toBeVisible()
     await expect(
       restoredPage!.getByText('Verified attachment description for alpha-layout.png', {

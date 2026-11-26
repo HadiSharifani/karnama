@@ -1,23 +1,20 @@
 # راهنمای بسته‌بندی و انتشار کارنما
 
-## وضعیت انتشار نامزد v0.1.0 — 2026-11-26
+## وضعیت بسته‌بندی انتشار v0.1.0 — 2026-11-27
 
-وضعیت منبع و مستندات برای انتشار آماده شده، اما نسخهٔ عمومی و installer تازه ساخته نشده است. `dist-phase6/Karnama-0.1.0-win-x64.exe` و hash قدیمی‌تر در یادداشت Phase 6 تاریخی‌اند و نباید به‌عنوان installer نامزد فعلی توزیع شوند.
+بسته‌بندی تازه و پذیرش محلی نصب/حذف روی Windows تکمیل شد. **هیچ push، tag یا GitHub Release انجام نشده است**؛ انتشار عمومی همچنان نیازمند تأیید جداگانهٔ کاربر است. Installer تاریخی Phase 6 برای این بسته استفاده نشد.
 
-- موفق: `npm test` (۸۱ تست در ۱۲ فایل)، `npm run typecheck`، `npm run lint`، `npm run format:check` و `npm run build:app`.
-- موفق: اجرای `npm run test:e2e` در Windows با medium integrity (۵ تست موفق، ۳ تست مخصوص installer به‌دلیل نبود artifact رد شدند). اجرای sandboxed Electron در این محیط پیش از شروع برنامه با `0x80000003` خارج می‌شود.
-- ناموفق/مسدود: ساخت NSIS تازه. Electron Builder به ابزار رسمی NSIS از GitHub نیاز دارد، اما دسترسی build به `github.com` با خطای DNS/reset شکست خورد و مرورگر نیز میزبان دارایی release را مسدود کرد. نصب‌کننده‌ای از خروجی قدیمی جایگزین نشد.
-- هنوز انجام‌نشده: نصب و آزمون installer نامزد فعلی، بررسی امضا/PE/icon آن، محاسبهٔ SHA-256 نهایی و انتشار repo/tag/release.
-- تغییرات نسخه: `package.json` روی `0.1.0` است و مجوز MIT در metadata و `LICENSE` آمده است. قاعدهٔ حذف زمان تسک‌های بایگانی‌شده از گزارش‌ها به migration تازه نیاز نداشت؛ schema موجود شامل migrationهای `0000`–`0006` است.
-- اسکن فایل‌های قابل‌انتشار: نشانی‌های کاربری مطلق، الگوهای credential/token/private key و فایل‌های پروفایل/پایگاه‌داده/backup یا executable به‌عنوان فایل منبع برای انتشار پیدا نشدند. خروجی build و E2E در `.gitignore` است.
+- ساخت با تنظیمات فعلی `electron-builder.yml` و خروجی مجزای `dist/v0.1.0-final/` انجام شد: `npm run package:win -- --config.directories.output=dist/v0.1.0-final`. `electron-builder` نسخهٔ `26.18.0` و Electron نسخهٔ `45.4.1` هستند؛ دریافت ابزار NSIS رسمی موردنیاز Electron Builder از GitHub موفق بود.
+- نسخهٔ `package.json` برابر `0.1.0` و مجوز MIT است. executable برنامه x64 (`PE 0x8664`)، نام محصول `کارنما`، نسخهٔ محصول `0.1.0.0` و icon تعبیه‌شده دارد. امضای Authenticode ندارد.
+- Installer تازه: `Karnama-0.1.0-win-x64.exe`، `134859300` بایت، SHA-256 برابر `2B9850032BA39D30C1BB475B55F65299C699EC3DB3D64B54564738754E196EF8`.
+- Blockmap: `Karnama-0.1.0-win-x64.exe.blockmap`، `141862` بایت، SHA-256 برابر `0087DE12CD9F16A7524CAB742475C69D36E7621BF36C859ABE60494D465CEA62`. فایل `SHA256SUMS.txt` در همان پوشه هر دو hash را ثبت می‌کند و با محاسبهٔ مجدد تطبیق داده شد.
+- نصب تمیز در مسیر ایزوله روی Windows 10 Pro x64 (build `26300.9818`) با exit code `0` انجام شد؛ executable نصب‌شده اجرا شد و سناریوهای smoke، آفلاین، گزارش‌ها، backup/restore، تنظیمات و قابلیت‌های Phase 7 را گذراندند. E2E نهایی: `7 passed, 1 skipped`. تست upgrade به‌دلیل نبود نسخهٔ عمومی قبلی برای ارتقا skip شد؛ artifact تاریخی Phase 6 جایگزین نسخهٔ قبلی نشد.
+- `npm test`: ۸۱ تست در ۱۲ فایل موفق؛ `npm run typecheck`، `npm run lint`، `npm run format:check` و `npm run build:app` نیز موفق شدند.
+- Uninstaller برنامه با exit code `0` اجرا شد. پوشهٔ نصب حذف شد و هر `71` فایل profile ایزوله پس از حذف باقی ماند؛ hash همهٔ فایل‌ها با وضعیت پیش از uninstall یکسان بود.
+- Installer و executable unsigned هستند؛ certificate یا timestamp پیکربندی نشده است. این محدودیت را پیش از توزیع عمومی باید در نظر گرفت.
+- تغییر معماری یا قابلیت برنامه انجام نشد و migration پایگاه‌داده لازم نبود. فایل‌های ساخت و profileهای آزمون داخل `dist/` و خارج از نسخهٔ کنترل‌شده‌اند.
 
-برای ادامه، فرمان زیر را در PowerShell Windows با دسترسی شبکه به ابزارهای رسمی Electron Builder اجرا کنید. خروجی تازه در پوشه‌ای جدا ساخته می‌شود تا artifactهای قبلی بازنویسی نشوند:
-
-```powershell
-npm run package:win -- --config.directories.output=dist-v0.1.0-release
-```
-
-پس از ساخت، سه تست installer-gated در `npm run test:e2e` را با متغیرهای محیطی تعریف‌شده در فایل‌های آزمون اجرا کنید؛ سپس PE، نام محصول، نسخه، icon، امضای unsigned، نصب، آفلاین، backup/restore، ارتقا و حفظ دادهٔ `userData` را در profileهای ایزوله بازبینی کنید. فقط همان فایل نصب‌شده و آزموده‌شده باید hash و به GitHub Release پیوست شود.
+Artifactهای نامزد فعلی فقط پس از بازبینی نهایی و تأیید انتشار باید در GitHub Release قرار گیرند. Hashهای Phase 6 در بخش تاریخی پایین صرفاً سابقه‌اند و با hashهای این بسته جایگزین نمی‌شوند.
 
 ## ساخت Windows installer
 
@@ -28,7 +25,7 @@ npm ci
 npm run package:win
 ```
 
-خروجی NSIS x64 در `dist-phase6/` قرار می‌گیرد. نام artifact از الگوی `Karnama-<version>-win-x64.exe` استفاده می‌کند. config نصب per-user است، UAC elevation درخواست نمی‌کند و shortcutهای Desktop/Start Menu می‌سازد. پوشهٔ خروجی را پیش از ساخت پاک نکنید؛ هر release باید با نتیجهٔ واقعی Electron Builder بررسی شود.
+خروجی پیش‌فرض NSIS x64 طبق `electron-builder.yml` در `dist-phase6/` قرار می‌گیرد؛ برای بستهٔ v0.1.0، خروجی به `dist/v0.1.0-final/` هدایت شد تا با buildهای پیشین تداخل نکند. نام artifact از الگوی `Karnama-<version>-win-x64.exe` استفاده می‌کند. config نصب per-user است، UAC elevation درخواست نمی‌کند و shortcutهای Desktop/Start Menu می‌سازد. پوشهٔ خروجی را پیش از ساخت پاک نکنید؛ هر release باید با نتیجهٔ واقعی Electron Builder بررسی شود.
 
 ## داده‌های کاربر و نسخهٔ پشتیبان
 
@@ -38,7 +35,7 @@ npm run package:win
 
 برای واردکردن ZIP، «بازیابی از فایل…» را انتخاب کنید. برنامه ابتدا archive، checksumها، سلامت SQLite، schema/migrations و پیوست‌ها را بررسی می‌کند؛ سپس جزئیات را برای تأیید نمایش می‌دهد. قبل از جایگزینی یک `pre_restore` از دادهٔ فعلی می‌سازد و پس از restore راه‌اندازی مجدد می‌شود. اگر برق یا فرایند در میانهٔ تعویض قطع شود، startup recovery از marker تراکنش برای بازگرداندن دادهٔ قبلی یا پاک‌سازی تراکنش کامل استفاده می‌کند.
 
-## چک‌لیست پیش از انتشار
+## چک‌لیست پذیرش Phase 6 (سابقه)
 
 - [x] `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm test` و `npm run test:e2e`.
 - [x] `npm run build:app` و `npm run package:win`؛ artifact نهایی نصب و اجرا شد.
@@ -49,7 +46,7 @@ npm run package:win
 - [x] نصب نسخهٔ ساخته‌شده از commit baseline و جایگزینی آن با installer فعلی؛ migration و حفظ داده بررسی شد. این build نسخهٔ منتشرشدهٔ قبلی نیست.
 - [ ] Code signing و timestamping؛ برای توزیع عمومی هنوز باید جداگانه پیکربندی و بررسی شوند.
 
-## وضعیت این مرحله
+## سوابق پذیرش Phase 6 (تاریخی)
 
 **بررسی نهایی 2026-11-24**
 
