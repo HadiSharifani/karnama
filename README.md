@@ -26,7 +26,7 @@ These real application screenshots use **synthetic acceptance-test data**, not r
 
 ## Download and install
 
-When v0.1.0 is released, download `Karnama-0.1.0-win-x64.exe` from the [KARNAMA Releases page](https://github.com/lifelandsai-collab/karnama/releases/latest). Verify its SHA-256 against `SHA256SUMS.txt` attached to that release. In PowerShell:
+When v0.1.0 is released, download `Karnama-0.1.0-win-x64.exe` from the [KARNAMA Releases page](https://github.com/HadiSharifani/karnama/releases/latest). Verify its SHA-256 against `SHA256SUMS.txt` attached to that release. In PowerShell:
 
 ```powershell
 Get-FileHash .\Karnama-0.1.0-win-x64.exe -Algorithm SHA256
@@ -78,7 +78,7 @@ Create a manual backup in Settings → Backup and Restore before upgrading or mo
 - Windows 32-bit, Windows ARM64, macOS, and Linux are unsupported in v0.1.0.
 - Holidays are entered by the user; they are not fetched from an online calendar.
 - KARNAMA reports time that was recorded. It cannot infer untracked work intervals or equate duration with productivity.
-- There is no published roadmap or promised delivery timeline. Future proposals can be tracked in [GitHub Issues](https://github.com/lifelandsai-collab/karnama/issues).
+- There is no published roadmap or promised delivery timeline. Future proposals can be tracked in [GitHub Issues](https://github.com/HadiSharifani/karnama/issues).
 - For common installation, timer, date, or backup problems, see [Troubleshooting (Persian)](docs/TROUBLESHOOTING_FA.md).
 
 ## Development and checks
@@ -122,7 +122,7 @@ Packaging and verified v0.1.0 installer evidence are documented in [RELEASE.md](
 
 ### نصب و نیازمندی‌ها
 
-پس از انتشار v0.1.0، فایل `Karnama-0.1.0-win-x64.exe` را از [صفحهٔ انتشار](https://github.com/lifelandsai-collab/karnama/releases/latest) دریافت و SHA-256 آن را با `SHA256SUMS.txt` تطبیق دهید. نصب‌کنندهٔ per-user دسترسی Administrator نمی‌خواهد اما امضای دیجیتال ندارد و ممکن است هشدار Windows نمایش داده شود. برای قابلیت‌های اصلی پس از نصب اینترنت لازم نیست. Windows 32-bit در v0.1.0 پشتیبانی نمی‌شود؛ macOS، Linux و ARM64 نیز هدف انتشار نیستند.
+پس از انتشار v0.1.0، فایل `Karnama-0.1.0-win-x64.exe` را از [صفحهٔ انتشار](https://github.com/HadiSharifani/karnama/releases/latest) دریافت و SHA-256 آن را با `SHA256SUMS.txt` تطبیق دهید. نصب‌کنندهٔ per-user دسترسی Administrator نمی‌خواهد اما امضای دیجیتال ندارد و ممکن است هشدار Windows نمایش داده شود. برای قابلیت‌های اصلی پس از نصب اینترنت لازم نیست. Windows 32-bit در v0.1.0 پشتیبانی نمی‌شود؛ macOS، Linux و ARM64 نیز هدف انتشار نیستند.
 
 ### حریم خصوصی و پشتیبان
 

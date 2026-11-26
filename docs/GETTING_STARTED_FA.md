@@ -4,7 +4,7 @@
 
 ## نصب
 
-۱. از [صفحهٔ انتشار KARNAMA](https://github.com/lifelandsai-collab/karnama/releases/latest) فایل `Karnama-0.1.0-win-x64.exe` را دریافت کنید.
+۱. از [صفحهٔ انتشار KARNAMA](https://github.com/HadiSharifani/karnama/releases/latest) فایل `Karnama-0.1.0-win-x64.exe` را دریافت کنید.
 ۲. SHA-256 فایل را با `SHA256SUMS.txt` پیوست انتشار مقایسه کنید. در PowerShell:
 
 ```powershell

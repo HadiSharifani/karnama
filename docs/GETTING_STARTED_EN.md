@@ -4,7 +4,7 @@ KARNAMA is a Persian-first, offline-capable Windows work journal. It stores task
 
 ## Install
 
-1. Open the [KARNAMA releases page](https://github.com/lifelandsai-collab/karnama/releases/latest) and download `Karnama-0.1.0-win-x64.exe`.
+1. Open the [KARNAMA releases page](https://github.com/HadiSharifani/karnama/releases/latest) and download `Karnama-0.1.0-win-x64.exe`.
 2. Compare the installer SHA-256 with `SHA256SUMS.txt` attached to the release. In PowerShell:
 
    ```powershell

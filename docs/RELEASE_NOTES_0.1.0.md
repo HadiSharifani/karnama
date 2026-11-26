@@ -13,7 +13,7 @@ KARNAMA v0.1.0 is the first public Windows x64 release of the Persian-first, loc
 
 ## Download
 
-Download `Karnama-0.1.0-win-x64.exe` from the [KARNAMA Releases page](https://github.com/lifelandsai-collab/karnama/releases/latest). Verify the file against the attached `SHA256SUMS.txt` before running it. The installer is unsigned; Windows may show an unknown-publisher or SmartScreen warning.
+Download `Karnama-0.1.0-win-x64.exe` from the [KARNAMA Releases page](https://github.com/HadiSharifani/karnama/releases/latest). Verify the file against the attached `SHA256SUMS.txt` before running it. The installer is unsigned; Windows may show an unknown-publisher or SmartScreen warning.
 
 Installer SHA-256: `2B9850032BA39D30C1BB475B55F65299C699EC3DB3D64B54564738754E196EF8`
 
@@ -49,7 +49,7 @@ See the [Getting Started guide](GETTING_STARTED_EN.md), [System Requirements](SY
 
 ## دریافت و نصب
 
-فایل `Karnama-0.1.0-win-x64.exe` را از [صفحهٔ انتشار KARNAMA](https://github.com/lifelandsai-collab/karnama/releases/latest) بگیرید و پیش از اجرا checksum آن را با `SHA256SUMS.txt` تطبیق دهید. نصب‌کننده امضای دیجیتال ندارد و Windows ممکن است هشدار ناشر ناشناس/SmartScreen نشان دهد.
+فایل `Karnama-0.1.0-win-x64.exe` را از [صفحهٔ انتشار KARNAMA](https://github.com/HadiSharifani/karnama/releases/latest) بگیرید و پیش از اجرا checksum آن را با `SHA256SUMS.txt` تطبیق دهید. نصب‌کننده امضای دیجیتال ندارد و Windows ممکن است هشدار ناشر ناشناس/SmartScreen نشان دهد.
 
 SHA-256 نصب‌کننده: `2B9850032BA39D30C1BB475B55F65299C699EC3DB3D64B54564738754E196EF8`
 
