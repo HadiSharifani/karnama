@@ -21,7 +21,7 @@
 | Bun | `1.4.2` در دسترس است |
 | Yarn | نصب نیست |
 | Git | `2.56.0.windows.2` نصب است |
-| وضعیت مخزن | baseline پیش از Phase 4.0 با commit `848be7f` ثبت شده؛ Remote تعریف نشده است |
+| وضعیت مخزن | baseline پیش از Phase 4.0 با commit `e20f2a4` ثبت شده؛ Remote تعریف نشده است |
 | محتوای baseline | پیش از scaffold، سند مشخصات و اسناد مرحله صفر وجود داشت؛ فایل package و کد برنامه وجود نداشت |
 
 Node.js نصب‌شده با Vite سازگار است. نسخه‌های مرحله یک در `package.json` و `package-lock.json` pin شده‌اند؛ نسخه Node میزبان نسخه Node داخل Electron را تعیین نمی‌کند. برای وابستگی‌ها از npm استفاده شده است.

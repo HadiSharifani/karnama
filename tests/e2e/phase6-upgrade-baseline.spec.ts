@@ -177,7 +177,7 @@ test('current installer upgrades the commit-built pre-Phase-4 baseline and prese
       const first = unwrap(
         await window.karnama.tasks.create({
           title: 'Baseline existing task alpha',
-          description: 'Must survive migration from commit 848be7f.',
+          description: 'Must survive migration from commit e20f2a4.',
           notes: 'old schema note alpha',
           status: 'in_progress',
           priority: 'high',

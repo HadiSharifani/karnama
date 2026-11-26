@@ -2,7 +2,7 @@
 
 ## 0.1.0 — 2026-11-25
 
-نامزد نخستین انتشار عمومی KARNAMA شامل Phase 4 تا 7، پشتیبان‌گیری و بازیابی، تحلیل و گزارش، و بهبود گزارش‌گیری برای تسک‌های بایگانی‌شده است. انتشار تا تأیید بستهٔ نهایی در [RELEASE.md](RELEASE.md) معلق است.
+نسخهٔ v0.1.0 شامل Phase 4 تا 7، پشتیبان‌گیری و بازیابی، تحلیل و گزارش، و بهبود گزارش‌گیری برای تسک‌های بایگانی‌شده است. بسته و مستندات آماده شده‌اند؛ انتشار عمومی در این مرحله انجام نشده است. جزئیات پذیرش و نصب در [RELEASE.md](RELEASE.md) آمده است.
 
 ### Archived task time reporting — 2026-11-25
 
@@ -31,7 +31,7 @@
 - نصب تمیز per-user و اجرای offline موفق شدند. Renderer در حالت offline درخواست HTTP(S) نفرستاد و backup دستی ساخته و اعتبارسنجی شد.
 - Restore واقعی در UI نصب‌شده با تسک، session/Work Date، لینک، دو تصویر، شرح و تنظیمات موفق شد؛ cancel دادهٔ تغییریافته را حفظ کرد. پس از restore و relaunch، SQLite سالم بود و hash پیوست‌ها با manifest تطبیق داشت. Safety backup نیز ساخته و اعتبارسنجی شد.
 - تست نصب‌شده staging باقی‌مانده پس از relaunch را آشکار کرد. پاک‌سازی پیش از relaunch/startup اصلاح و برای آن تست واحد و E2E افزوده شد.
-- installer قدیمی یا release tag وجود نداشت؛ installer pre-Phase-4 از commit `848be7f` در آرشیو مستقل ساخته و برای upgrade/migration آزمایش شد. migration از ۴ به ۶ رسید و task/session/settings حفظ شدند. هر دو build نسخهٔ `0.1.0` دارند و baseline release عمومی قدیمی محسوب نمی‌شود؛ baseline لینک و attachment نداشت.
+- installer قدیمی یا release tag وجود نداشت؛ installer pre-Phase-4 از baseline بازنویسی‌شدهٔ commit `e20f2a4` در آرشیو مستقل ساخته و برای upgrade/migration آزمایش شد. migration از ۴ به ۶ رسید و task/session/settings حفظ شدند. هر دو build نسخهٔ `0.1.0` دارند و baseline release عمومی قدیمی محسوب نمی‌شود؛ baseline لینک و attachment نداشت.
 - uninstall برنامه را از مسیر ایزوله حذف کرد و ۷۱ فایل `userData` خارجی بدون تغییر hash باقی ماند. Installer امضای Authenticode ندارد؛ پیامدها و پیش‌نیازهای امضای آینده در `RELEASE.md` آمده‌اند.
 
 ## Phase 5 — 2026-11-24 (پیاده‌سازی و پذیرش معیارهای رسمی)
@@ -61,7 +61,7 @@
 
 ## Phase 4.0 — 2026-11-22 (بررسی runtime)
 
-- baseline پیش از فاز با commit `848be7f` و ۸۰ فایل نگهداری‌پذیر ثبت شد؛ remote ایجاد نشد.
+- baseline پیش از فاز با commit `e20f2a4` و ۸۰ فایل نگهداری‌پذیر ثبت شد؛ remote ایجاد نشد.
 - crash با اجرای همان Electron 45.4.1 در دو سطح Windows بازتولید و علت آن به توکن low-integrity محیط Codex محدود شد؛ اجرای باینری از نشست عادی Windows موفق است.
 - CSP توسعه با hash دقیق preamble React Refresh اصلاح شد؛ تنظیمات امنیتی Electron تغییر نکردند. selectorهای مبهم E2E دقیق شدند.
 - Dev و Renderer دیداری بررسی شدند؛ IPC تنظیمات، E2E و ماندگاری پس از restart موفق‌اند.

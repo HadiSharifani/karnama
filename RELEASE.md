@@ -1,8 +1,8 @@
 # راهنمای بسته‌بندی و انتشار کارنما
 
-## وضعیت بسته‌بندی انتشار v0.1.0 — 2026-11-27
+## وضعیت آماده‌سازی انتشار v0.1.0 — 2026-11-27
 
-بسته‌بندی تازه و پذیرش محلی نصب/حذف روی Windows تکمیل شد. **هیچ push، tag یا GitHub Release انجام نشده است**؛ انتشار عمومی همچنان نیازمند تأیید جداگانهٔ کاربر است. Installer تاریخی Phase 6 برای این بسته استفاده نشد.
+بسته‌بندی و پذیرش محلی نصب/حذف روی Windows تکمیل شده و مستندات/CI برای انتشار آماده می‌شوند. هویت commitهای فعال طبق نام و ایمیل مصوب بازنویسی شد؛ tree هر چهار commit حفظ شده است. **طبق دستور فعلی هیچ Push، tag یا GitHub Release انجام نشده است.** Installer تاریخی Phase 6 برای این بسته استفاده نشد.
 
 - ساخت با تنظیمات فعلی `electron-builder.yml` و خروجی مجزای `dist/v0.1.0-final/` انجام شد: `npm run package:win -- --config.directories.output=dist/v0.1.0-final`. `electron-builder` نسخهٔ `26.18.0` و Electron نسخهٔ `45.4.1` هستند؛ دریافت ابزار NSIS رسمی موردنیاز Electron Builder از GitHub موفق بود.
 - نسخهٔ `package.json` برابر `0.1.0` و مجوز MIT است. executable برنامه x64 (`PE 0x8664`)، نام محصول `کارنما`، نسخهٔ محصول `0.1.0.0` و icon تعبیه‌شده دارد. امضای Authenticode ندارد.
@@ -35,6 +35,14 @@ npm run package:win
 
 برای واردکردن ZIP، «بازیابی از فایل…» را انتخاب کنید. برنامه ابتدا archive، checksumها، سلامت SQLite، schema/migrations و پیوست‌ها را بررسی می‌کند؛ سپس جزئیات را برای تأیید نمایش می‌دهد. قبل از جایگزینی یک `pre_restore` از دادهٔ فعلی می‌سازد و پس از restore راه‌اندازی مجدد می‌شود. اگر برق یا فرایند در میانهٔ تعویض قطع شود، startup recovery از marker تراکنش برای بازگرداندن دادهٔ قبلی یا پاک‌سازی تراکنش کامل استفاده می‌کند.
 
+## روند پیشنهادی انتشارهای بعدی
+
+1. نسخه را در `package.json` و `package-lock.json` به‌روزرسانی کنید، یادداشت انتشار جدید بسازید و تغییرات را در changelog ثبت کنید. از ساخت خودکار tag هنگام تغییر نسخه پرهیز کنید.
+2. در Windows x64، `npm ci`، تست واحد، typecheck، lint، format check و build را اجرا کنید. CI همین بررسی‌ها را روی pull request و push به `master` اجرا می‌کند و هیچ مرحلهٔ انتشار خودکاری ندارد.
+3. installer را در یک پوشهٔ خروجی تازه بسازید؛ installer قبلی را بازنویسی نکنید. نسخه، معماری، امضا، checksum، نصب، اجرای برنامه، backup/restore و uninstall را روی مسیر/profile ایزوله بررسی کنید.
+4. `SHA256SUMS.txt` را از artifactهای همان build بسازید و دوباره hashها را تطبیق دهید. فقط installer آزموده‌شده را منتشر کنید؛ blockmap زمانی لازم است که سازوکار انتشار/به‌روزرسانی از آن استفاده کند.
+5. یادداشت انتشار، نیازمندی‌ها، هشدار unsigned و سازگاری معماری را بازبینی کنید. Tag و GitHub Release را فقط در مرحله‌ای بسازید که انتشار صریحاً مجاز شده باشد.
+
 ## چک‌لیست پذیرش Phase 6 (سابقه)
 
 - [x] `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm test` و `npm run test:e2e`.
@@ -55,7 +63,7 @@ npm run package:win
 - NSIS x64 نصب‌شده در پوشهٔ ایزوله اجرا شد. در حالت offline، onboarding و ساخت/اعتبارسنجی backup موفق شدند و Renderer هیچ درخواست HTTP(S) نفرستاد.
 - Restore از UI نصب‌شده با دو تسک، دو session با Work Date دستی، دو لینک، دو تصویر و شرح‌ها انجام شد. cancel دادهٔ تغییریافته را حفظ کرد؛ restore تأییدشده دادهٔ اولیه را پس از relaunch بازگرداند. SQLite `integrity_check` برابر `ok` و `foreign_key_check` خالی بود؛ اندازه و SHA-256 دو فایل با manifest backup مطابق بود. Safety backup پیش از restore ساخته و اعتبارسنجی شد؛ هیچ restore ناموفقی در UI رخ نداد. تست واحد recovery تراکنش ناقص را پوشش می‌دهد.
 - Restore نصب‌شده یک پوشهٔ staging پس از relaunch باقی می‌گذاشت. پاک‌سازی پیش از relaunch و شناسایی نام staging در startup اصلاح شد و برای هر دو مسیر تست رگرسیون اضافه شد.
-- فایل installer قبلی یا tag نسخهٔ منتشرشده موجود نبود. baseline pre-Phase-4 از `git archive 848be7f` در پوشهٔ مستقل build شد؛ هر دو build version `0.1.0` دارند. آزمون، جایگزینی/migration از source snapshot است و ادعای upgrade از release عمومی قدیمی نیست. دادهٔ دو تسک، دو session و تنظیمات از migrationهای ۴ به ۶ باقی ماند و پس از restart و uninstall نیز پایگاه داده حفظ شد. baseline پیش از Phase 4 بود و لینک/attachment نداشت.
+- فایل installer قبلی یا tag نسخهٔ منتشرشده موجود نبود. baseline pre-Phase-4 از `git archive e20f2a4` در پوشهٔ مستقل build شد؛ هر دو build version `0.1.0` دارند. آزمون، جایگزینی/migration از source snapshot است و ادعای upgrade از release عمومی قدیمی نیست. دادهٔ دو تسک، دو session و تنظیمات از migrationهای ۴ به ۶ باقی ماند و پس از restart و uninstall نیز پایگاه داده حفظ شد. baseline پیش از Phase 4 بود و لینک/attachment نداشت.
 - Installer نهایی: `dist-phase6/Karnama-0.1.0-win-x64.exe`، ۱۳۴٬۸۵۱٬۶۳۴ بایت، SHA-256: `C695C0098B9388736D3AA45B37469FC65FAE5F23F3400380D2794D2A4111258C`. Hash قبلی با artifact پیش از اصلاح staging تطبیق داشت؛ این artifact پس از اصلاح rebuild شد.
 - PE برنامه `0x8664` (x64)، ProductVersion `0.1.0.0` و ProductName `کارنما` است. آیکون از executable استخراج و بررسی شد؛ `app.asar` و migrationهای `0000` تا `0005` همراه برنامه بودند. مسیر دادهٔ تستی خارج از install قرار داشت. uninstall برنامه را حذف کرد و ۷۱ فایل userData را بدون تغییر hash باقی گذاشت.
 - `Get-AuthenticodeSignature` وضعیت `NotSigned` و بدون signer نشان داد؛ signing certificate پیکربندی نشده است. فایل unsigned نام ناشر تأییدشده ندارد و Windows SmartScreen یا policyهای سازمانی ممکن است هشدار دهند یا اجرا را محدود کنند. SHA-256 هویت ناشر را اثبات نمی‌کند. برای انتشار عمومی certificate امن در CI، امضای executable/installer/uninstaller، timestamp قابل‌اعتماد و بررسی SignTool لازم است؛ گواهی خریداری یا تنظیم نشد.

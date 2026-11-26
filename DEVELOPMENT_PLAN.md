@@ -85,7 +85,7 @@ CRUD و بایگانی قابل‌بازیابی تسک، ثبت دستی/تای
 
 ## وضعیت زیرفاز ۴.۰ — 2026-11-22
 
-**نتیجه: COMPLETED برای معیارهای همین بررسی.** baseline پیش از تغییرات با commit `848be7f` و ۸۰ فایل ثبت شد؛ remote اضافه نشد. علت crash با مقایسه اجرای همان باینری در دو سطح اجرای Codex مشخص شد: توکن low-integrity Codex crash می‌کند و نشست عادی Windows با medium integrity همان Electron را سالم اجرا می‌کند.
+**نتیجه: COMPLETED برای معیارهای همین بررسی.** baseline پیش از تغییرات با commit `e20f2a4` و ۸۰ فایل ثبت شد؛ remote اضافه نشد. علت crash با مقایسه اجرای همان باینری در دو سطح اجرای Codex مشخص شد: توکن low-integrity Codex crash می‌کند و نشست عادی Windows با medium integrity همان Electron را سالم اجرا می‌کند.
 
 - Electron `45.4.1` با `--version` در نشست عادی Windows `v45.4.1` را با exit `0` چاپ کرد. معماری سیستم و باینری x64 است؛ CRTهای لازم موجودند. رخداد WER/Application Error برای Electron پیدا نشد و AppLocker قاعده مؤثر ندارد.
 - `npm run dev` در نشست عادی Windows پنجره را نمایش داد؛ Renderer وصل شد و پوسته فارسی RTL/راهنمای آغاز کار دیده شد.
@@ -199,7 +199,7 @@ restore پس از تأیید کاربر، manifest، مسیرهای ZIP، CRC، 
 
 تصمیم‌های اجرایی با مشخصات هماهنگ‌اند: نسخهٔ پشتیبان خودکار فقط پس از اولین راه‌اندازی و در حالت due ساخته می‌شود؛ هیچ فایلی بدون اقدام صریح از UI حذف نمی‌شود؛ نسخه‌های `automatic` و `pre_restore` از حذف UI محافظت می‌شوند؛ restore تایمر ذخیره‌شده در نسخهٔ انتخابی را نگه می‌دارد و هنگام خروج تمیز run جاری را pause می‌کند.
 
-**نتیجهٔ پذیرش نهایی 2026-11-24:** `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm test` (۶۹ تست در ۱۰ فایل), `npm run build:app`, `npm run package:win` و full E2E (۴ موفق، ۳ env-gated) موفق شدند. سه تست env-gated به‌صورت جدا اجرا شدند: restore کامل UI نصب‌شده، اجرای offline/backup و upgrade/migration از baseline ساخته‌شده از commit `848be7f`. Restore داده‌ها و checksum attachmentها را پس از relaunch حفظ کرد؛ cancel دادهٔ جاری را تغییر نداد. baseline schema ۴ را به ۶ مهاجرت داد و task/session/settings پس از restart ماندند. baseline همان version `0.1.0` است و release عمومی قدیمی به‌شمار نمی‌آید. Installer/hash، uninstall، signing و محدودیت‌ها در `RELEASE.md` ثبت شده‌اند. معیارهای رسمی Phase 6 در `PROJECT_SPEC.md` برآورده شدند؛ installer همچنان unsigned است.
+**نتیجهٔ پذیرش نهایی 2026-11-24:** `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm test` (۶۹ تست در ۱۰ فایل), `npm run build:app`, `npm run package:win` و full E2E (۴ موفق، ۳ env-gated) موفق شدند. سه تست env-gated به‌صورت جدا اجرا شدند: restore کامل UI نصب‌شده، اجرای offline/backup و upgrade/migration از baseline ساخته‌شده از commit بازنویسی‌شدهٔ `e20f2a4`. Restore داده‌ها و checksum attachmentها را پس از relaunch حفظ کرد؛ cancel دادهٔ جاری را تغییر نداد. baseline schema ۴ را به ۶ مهاجرت داد و task/session/settings پس از restart ماندند. baseline همان version `0.1.0` است و release عمومی قدیمی به‌شمار نمی‌آید. Installer/hash، uninstall، signing و محدودیت‌ها در `RELEASE.md` ثبت شده‌اند. معیارهای رسمی Phase 6 در `PROJECT_SPEC.md` برآورده شدند؛ installer همچنان unsigned است.
 
 ### مرحله ۷ — تجربه کاربری و تعامل
 

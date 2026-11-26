@@ -1,93 +1,144 @@
 # KARNAMA
 
-KARNAMA is an offline-first, single-user Windows work journal with a Persian, right-to-left interface. Tasks, work sessions, attachments, settings, and backups stay on the user's device.
+**A Persian-first, offline-capable work journal for Windows.** Organize tasks, record real work sessions, compare recorded time with a work schedule, and prepare monthly reports—while keeping the app's data on your device.
 
-## Features
+کارنما، دفتر ثبت کار روزانهٔ فارسی برای Windows است: تسک‌ها را سامان بدهید، زمان واقعی کار را ثبت کنید و گزارش بگیرید.
 
-- Tasks, manual and timed work sessions, and a Jalali/Gregorian calendar.
-- Daily and monthly commitments, analytics, and Persian PDF/HTML reports.
-- Task links and local image attachments.
-- Manual and scheduled backups with validation and staged restore.
-- Archived tasks keep their history; archived-task time is excluded from active reports and becomes reportable again if the task is restored.
+> «کارهایت را ثبت کن، زمانت را بشناس، عملکردت را ببین.»
+
+## Key features
+
+- Task Board and List views, status and priority, search, ordering, archive/restore, links, and local image attachments.
+- A persistent global timer, manual sessions, and reviewable recovery after an unexpected shutdown.
+- Jalali or Gregorian display with distinct Calendar Date and Work Date reporting.
+- Work schedules, daily/monthly commitments, holidays, and leave.
+- Dashboard, time analytics, and company or personal monthly reports exported as PDF or HTML.
+- Manual and scheduled ZIP backups with integrity validation and staged restore.
+- Archived-task sessions are excluded from active reports; restoring a task makes its preserved history reportable again.
 
 ## Screenshots
 
-The screenshots use synthetic acceptance-test data.
+These real application screenshots use **synthetic acceptance-test data**, not real user work records.
 
-![KARNAMA task board](docs/screenshots/tasks-board-dark.png)
+![KARNAMA task board in dark theme — demonstration data](docs/assets/tasks-board-dark.png)
 
-![KARNAMA analytics](docs/screenshots/analytics-overview.png)
+![KARNAMA analytics page — demonstration data](docs/assets/analytics-overview.png)
 
-## Install on Windows
+## Download and install
 
-Download `Karnama-0.1.0-win-x64.exe` from the [GitHub Releases page](https://github.com/lifelandsai-collab/KARNAMA/releases/latest), verify its SHA-256 against the release notes, and run the per-user installer. It does not require administrator access.
+When v0.1.0 is released, download `Karnama-0.1.0-win-x64.exe` from the [KARNAMA Releases page](https://github.com/lifelandsai-collab/karnama/releases/latest). Verify its SHA-256 against `SHA256SUMS.txt` attached to that release. In PowerShell:
 
-The installer is not code-signed. Windows may show an unknown-publisher or SmartScreen warning. Check the published checksum and release notes; KARNAMA does not ask you to disable Windows security settings.
+```powershell
+Get-FileHash .\Karnama-0.1.0-win-x64.exe -Algorithm SHA256
+```
 
-KARNAMA currently has no automatic updater. For a later release, make a backup in Settings, download the new installer from the Releases page, and install it over the existing installation. User data is stored separately from the application install folder.
+The per-user installer does not require administrator access. It is **not code-signed**; Windows may display an unknown-publisher or SmartScreen warning. A matching checksum confirms file consistency with the published value, not publisher identity. Do not disable Windows security protections.
 
-## Requirements and data
+For first launch and setup, see [Getting Started (English)](docs/GETTING_STARTED_EN.md) or [شروع کار (فارسی)](docs/GETTING_STARTED_FA.md).
 
-- Windows x64 (tested on Windows 10 x64).
-- Internet access is not required to use the installed app.
-- The app stores its SQLite database and managed attachments in Electron's per-user `userData` directory. The app shows backup locations in Settings; the exact `userData` path depends on the Windows account and installation.
-- Uninstalling the application preserves user data. Keep independent copies of backups before replacing a device or profile.
+## System requirements
 
-## Development
+- Windows x64. The installer was verified on Windows 10 Pro x64.
+- Windows 32-bit is **not supported in v0.1.0**. macOS, Linux, and Windows ARM64 are not release targets.
+- Internet access is not required for core features after installation. Opening external task links uses the system browser.
+- End users do not need to install Node.js. Developers need Node.js `24.13.0` or later and npm.
+- See [System Requirements](docs/SYSTEM_REQUIREMENTS.md) for verified environment and unbenchmarked requirements.
 
-Use Node.js `24.13.0` or later and npm:
+## Documentation
+
+### English
+
+- [Getting Started](docs/GETTING_STARTED_EN.md)
+- [User Guide](docs/USER_GUIDE_EN.md)
+- [FAQ](docs/FAQ_EN.md)
+- [System Requirements](docs/SYSTEM_REQUIREMENTS.md)
+- [Privacy and Security](docs/PRIVACY_AND_SECURITY.md)
+- [Release Notes v0.1.0](docs/RELEASE_NOTES_0.1.0.md)
+
+### فارسی
+
+- [شروع کار](docs/GETTING_STARTED_FA.md)
+- [راهنمای کاربر](docs/USER_GUIDE_FA.md)
+- [مدیریت تسک‌ها](docs/TASK_MANAGEMENT_FA.md)
+- [تقویم و زمان](docs/CALENDAR_AND_TIME_FA.md)
+- [گزارش‌ها و تحلیل عملکرد](docs/REPORTS_AND_ANALYTICS_FA.md)
+- [پشتیبان‌گیری و بازیابی](docs/BACKUP_AND_RESTORE_FA.md)
+- [رفع اشکال](docs/TROUBLESHOOTING_FA.md)
+- [پرسش‌های پرتکرار](docs/FAQ_FA.md)
+
+## Data, privacy, and backups
+
+KARNAMA is a single-user application with no account or cloud sync. Its SQLite database, managed images, and backups stay in the current Windows user's app-data directory. Core task and time features work offline. Uninstalling preserves user data.
+
+Create a manual backup in Settings → Backup and Restore before upgrading or moving devices. Automatic backups are checked while the app is running, roughly once every 24 hours; old backup files are not automatically removed. Backup ZIPs are **not encrypted** by KARNAMA. Protect copies that contain work information. See [Privacy and Security](docs/PRIVACY_AND_SECURITY.md) and the Persian [Backup and Restore guide](docs/BACKUP_AND_RESTORE_FA.md).
+
+## Known limitations and roadmap
+
+- The installer is unsigned and there is no automatic updater.
+- Windows 32-bit, Windows ARM64, macOS, and Linux are unsupported in v0.1.0.
+- Holidays are entered by the user; they are not fetched from an online calendar.
+- KARNAMA reports time that was recorded. It cannot infer untracked work intervals or equate duration with productivity.
+- There is no published roadmap or promised delivery timeline. Future proposals can be tracked in [GitHub Issues](https://github.com/lifelandsai-collab/karnama/issues).
+- For common installation, timer, date, or backup problems, see [Troubleshooting (Persian)](docs/TROUBLESHOOTING_FA.md).
+
+## Development and checks
 
 ```powershell
 npm ci
 npm run dev
 ```
 
-Quality checks and a Windows x64 NSIS installer:
+The CI workflow runs on pull requests and pushes to `master` on Windows x64 with Node.js `24.13.0`. To run the same checks locally:
 
 ```powershell
+npm test
 npm run typecheck
 npm run lint
 npm run format:check
-npm test
 npm run build:app
-npm run package:win
 ```
 
-See [RELEASE.md](RELEASE.md) for packaging, data, restore, and release details; [ARCHITECTURE.md](ARCHITECTURE.md) for implementation notes; and [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md) for the completed phase record. Release history is in [CHANGELOG.md](CHANGELOG.md).
-
-## Known limitations
-
-- Windows installers are unsigned, and there is no automatic update service.
-- Public holidays are entered by the user; they are not bundled or fetched online.
-- The app does not record workday start/end, so it cannot infer exact productivity for untracked intervals.
-- If timer recovery finds an interval that needs user review, archiving that task waits until the interval is resolved.
-
-## License
-
-KARNAMA is distributed under the [MIT License](LICENSE).
-
----
+Packaging and verified v0.1.0 installer evidence are documented in [RELEASE.md](RELEASE.md). Architecture notes are in [ARCHITECTURE.md](ARCHITECTURE.md), and product history is in [CHANGELOG.md](CHANGELOG.md).
 
 ## فارسی
 
-کارنما دفتر ثبت کار روزانه برای Windows، آفلاین و تک‌کاربره است. رابط برنامه فارسی و راست‌به‌چپ است و تسک‌ها، جلسه‌های کاری، پیوست‌ها، تنظیمات و نسخه‌های پشتیبان روی دستگاه کاربر نگه‌داری می‌شوند.
+### دربارهٔ کارنما
 
-### قابلیت‌ها
+کارنما یک دفتر ثبت کار فارسی و آفلاین برای Windows است. تسک‌ها را مرتب کنید، جلسه‌های کاری را با تایمر یا دستی ثبت کنید، زمان را با تعهد کاری مقایسه کنید و گزارش ماهانه بسازید. داده‌های برنامه روی دستگاه کاربر نگه‌داری می‌شوند.
 
-- مدیریت تسک و ثبت جلسه‌های دستی یا تایمری، همراه تقویم جلالی و میلادی.
-- تعهدهای روزانه و ماهانه، تحلیل و گزارش فارسی PDF/HTML.
-- پیوند و تصویر محلی برای تسک‌ها.
-- پشتیبان‌گیری دستی و زمان‌بندی‌شده، اعتبارسنجی و بازیابی مرحله‌ای.
-- تاریخچهٔ تسک بایگانی‌شده حفظ می‌شود؛ زمان آن از گزارش‌های فعال کنار می‌رود و با بازیابی تسک دوباره قابل گزارش است.
+### امکانات
 
-### نصب و به‌روزرسانی
+- برد و فهرست تسک، وضعیت و اولویت، جست‌وجو، ترتیب، بایگانی/بازیابی، لینک و تصویر محلی.
+- تایمر سراسری، ثبت دستی جلسه و بررسی بازهٔ بازیابی پس از بسته‌شدن غیرمنتظره.
+- تقویم شمسی یا میلادی و تفکیک Calendar Date از Work Date.
+- برنامهٔ کاری، تعهد روزانه/ماهانه، تعطیلی و مرخصی.
+- داشبورد، تحلیل زمان و گزارش ماهانهٔ شرکت یا شخصی با خروجی PDF/HTML.
+- ZIP پشتیبان دستی و زمان‌بندی‌شده با اعتبارسنجی و بازیابی مرحله‌ای.
+- زمان جلسه‌های تسک بایگانی‌شده از گزارش فعال کنار می‌رود؛ با بازیابی تسک، سابقهٔ حفظ‌شده دوباره گزارش‌پذیر می‌شود.
 
-فایل `Karnama-0.1.0-win-x64.exe` را از [صفحهٔ انتشار GitHub](https://github.com/lifelandsai-collab/KARNAMA/releases/latest) دریافت کنید، SHA-256 را با یادداشت انتشار تطبیق دهید و نصب‌کنندهٔ per-user را اجرا کنید؛ دسترسی Administrator لازم نیست.
+### تصویرها
 
-نصب‌کننده امضای کد ندارد؛ ممکن است Windows پیام ناشر ناشناس یا SmartScreen نشان دهد. checksum و یادداشت انتشار را بررسی کنید. برای به‌روزرسانی فعلاً Settings → «پشتیبان‌گیری و بازیابی» یک نسخهٔ پشتیبان بسازید، نصب‌کنندهٔ جدید را از صفحهٔ انتشار بگیرید و روی نسخهٔ موجود نصب کنید. برنامه به‌روزرسان خودکار ندارد.
+تصاویر بالا از برنامهٔ واقعی گرفته شده‌اند و از **دادهٔ آزمایشی ساختگی** استفاده می‌کنند؛ هیچ سابقهٔ واقعی کاربر نمایش داده نشده است.
 
-### داده و توسعه
+### نصب و نیازمندی‌ها
 
-پایگاه داده و پیوست‌ها در پوشهٔ `userData` مختص کاربر Windows هستند و حذف برنامه این داده‌ها را پاک نمی‌کند. مسیر دقیق بر اساس حساب و نصب Windows تغییر می‌کند. برنامه پس از نصب برای کارکرد به اینترنت نیاز ندارد. برای توسعه، Node.js نسخهٔ `24.13.0` یا جدیدتر و npm لازم است. راهنمای فنی و انتشار در پیوندهای بالای این صفحه آمده‌اند.
+پس از انتشار v0.1.0، فایل `Karnama-0.1.0-win-x64.exe` را از [صفحهٔ انتشار](https://github.com/lifelandsai-collab/karnama/releases/latest) دریافت و SHA-256 آن را با `SHA256SUMS.txt` تطبیق دهید. نصب‌کنندهٔ per-user دسترسی Administrator نمی‌خواهد اما امضای دیجیتال ندارد و ممکن است هشدار Windows نمایش داده شود. برای قابلیت‌های اصلی پس از نصب اینترنت لازم نیست. Windows 32-bit در v0.1.0 پشتیبانی نمی‌شود؛ macOS، Linux و ARM64 نیز هدف انتشار نیستند.
 
-کارنما با مجوز [MIT](LICENSE) منتشر می‌شود.
+### حریم خصوصی و پشتیبان
+
+برنامه حساب یا همگام‌سازی ابری ندارد. پایگاه داده، تصاویر و ZIPهای پشتیبان در پوشهٔ دادهٔ حساب Windows قرار می‌گیرند و uninstall آن‌ها را نگه می‌دارد. پیش از ارتقا یا جابه‌جایی، یک نسخهٔ دستی بسازید و بیرون از دستگاه کپی کنید. ZIPها رمزگذاری نمی‌شوند؛ از رسانهٔ محافظت‌شده استفاده کنید.
+
+### مستندات
+
+برای شروع به [راهنمای فارسی](docs/GETTING_STARTED_FA.md) بروید. جزئیات در راهنمای [مدیریت تسک](docs/TASK_MANAGEMENT_FA.md)، [تقویم و زمان](docs/CALENDAR_AND_TIME_FA.md)، [گزارش‌ها](docs/REPORTS_AND_ANALYTICS_FA.md)، [پشتیبان‌گیری](docs/BACKUP_AND_RESTORE_FA.md)، [رفع اشکال](docs/TROUBLESHOOTING_FA.md)، [نیازمندی سیستم](docs/SYSTEM_REQUIREMENTS.md) و [یادداشت انتشار](docs/RELEASE_NOTES_0.1.0.md) آمده است.
+
+### توسعه
+
+برای اجرا در محیط توسعه، Node.js نسخهٔ `24.13.0` یا جدیدتر و npm لازم است. دستورهای نصب و بررسی کیفیت در بخش انگلیسی بالا هستند؛ جزئیات بسته‌بندی در [RELEASE.md](RELEASE.md) قرار دارد.
+
+## About and credits
+
+- **Product:** KARNAMA
+- **Main product creator:** Mohammad Hadi Sharifani
+- **Product team display name:** KARNAMA Team
+- **License:** [MIT](LICENSE)
