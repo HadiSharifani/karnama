@@ -56,6 +56,7 @@ export const tasks = sqliteTable(
     })
       .notNull()
       .default('todo'),
+    position: integer('position').notNull().default(0),
     priority: text('priority', { enum: ['low', 'medium', 'high'] })
       .notNull()
       .default('medium'),
@@ -75,8 +76,53 @@ export const tasks = sqliteTable(
       'tasks_estimated_duration_check',
       sql`${table.estimatedDurationMinutes} IS NULL OR ${table.estimatedDurationMinutes} BETWEEN 1 AND 1000000`
     ),
+    check('tasks_position_check', sql`${table.position} >= 0`),
     index('tasks_archive_updated_idx').on(table.archivedAtUtcMs, table.updatedAtUtcMs),
-    index('tasks_status_idx').on(table.status)
+    index('tasks_status_idx').on(table.status),
+    index('tasks_board_position_idx').on(table.status, table.archivedAtUtcMs, table.position)
+  ]
+)
+
+export const taskLinks = sqliteTable(
+  'task_links',
+  {
+    id: text('id').primaryKey(),
+    taskId: text('task_id')
+      .notNull()
+      .references(() => tasks.id, { onDelete: 'cascade' }),
+    url: text('url').notNull(),
+    title: text('title').notNull(),
+    type: text('type', { enum: ['figma', 'external'] }).notNull(),
+    createdAtUtcMs: integer('created_at_utc_ms').notNull()
+  },
+  (table) => [
+    check('task_links_type_check', sql`${table.type} IN ('figma', 'external')`),
+    index('task_links_task_created_idx').on(table.taskId, table.createdAtUtcMs)
+  ]
+)
+
+export const attachments = sqliteTable(
+  'attachments',
+  {
+    id: text('id').primaryKey(),
+    taskId: text('task_id')
+      .notNull()
+      .references(() => tasks.id, { onDelete: 'cascade' }),
+    displayName: text('display_name').notNull(),
+    mimeType: text('mime_type', { enum: ['image/png', 'image/jpeg', 'image/webp'] }).notNull(),
+    fileSizeBytes: integer('file_size_bytes').notNull(),
+    description: text('description'),
+    createdAtUtcMs: integer('created_at_utc_ms').notNull(),
+    storageRef: text('storage_ref').notNull()
+  },
+  (table) => [
+    check(
+      'attachments_mime_type_check',
+      sql`${table.mimeType} IN ('image/png', 'image/jpeg', 'image/webp')`
+    ),
+    check('attachments_file_size_check', sql`${table.fileSizeBytes} BETWEEN 1 AND 20971520`),
+    index('attachments_task_created_idx').on(table.taskId, table.createdAtUtcMs),
+    uniqueIndex('attachments_storage_ref_idx').on(table.storageRef)
   ]
 )
 
@@ -276,5 +322,34 @@ export const monthlyCommitmentDays = sqliteTable(
   (table) => [
     uniqueIndex('monthly_commitment_day_idx').on(table.commitmentId, table.workDate),
     index('monthly_commitment_day_date_idx').on(table.workDate)
+  ]
+)
+
+export const reportSnapshots = sqliteTable(
+  'report_snapshots',
+  {
+    id: text('id').primaryKey(),
+    reportType: text('report_type', { enum: ['company', 'personal'] }).notNull(),
+    calendar: text('calendar', { enum: ['jalali', 'gregorian'] }).notNull(),
+    periodKey: text('period_key').notNull(),
+    periodStartWorkDate: text('period_start_work_date').notNull(),
+    periodEndWorkDate: text('period_end_work_date').notNull(),
+    format: text('format', { enum: ['pdf', 'html'] }).notNull(),
+    generatedAtUtcMs: integer('generated_at_utc_ms').notNull(),
+    payloadJson: text('payload_json').notNull()
+  },
+  (table) => [
+    check('report_snapshots_type_check', sql`${table.reportType} IN ('company', 'personal')`),
+    check('report_snapshots_calendar_check', sql`${table.calendar} IN ('jalali', 'gregorian')`),
+    check('report_snapshots_format_check', sql`${table.format} IN ('pdf', 'html')`),
+    check(
+      'report_snapshots_period_check',
+      sql`${table.periodStartWorkDate} <= ${table.periodEndWorkDate}`
+    ),
+    index('report_snapshots_period_created_idx').on(
+      table.calendar,
+      table.periodKey,
+      table.generatedAtUtcMs
+    )
   ]
 )

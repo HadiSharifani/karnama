@@ -8,14 +8,18 @@ export type IpcSenderCheck = {
   expectedOrigin: string
 }
 
+export function isTrustedOrigin(value: string, expectedOrigin: string): boolean {
+  try {
+    return new URL(value).origin === new URL(expectedOrigin).origin
+  } catch {
+    return false
+  }
+}
+
 export function isTrustedIpcSender(check: IpcSenderCheck): boolean {
   if (check.sender !== check.expectedSender || !check.frame || check.frame !== check.mainFrame) {
     return false
   }
 
-  try {
-    return new URL(check.frame.url).origin === new URL(check.expectedOrigin).origin
-  } catch {
-    return false
-  }
+  return isTrustedOrigin(check.frame.url, check.expectedOrigin)
 }

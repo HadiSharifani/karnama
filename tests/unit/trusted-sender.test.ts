@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { isTrustedIpcSender } from '../../src/main/security/trusted-sender'
+import { isTrustedIpcSender, isTrustedOrigin } from '../../src/main/security/trusted-sender'
 
 describe('IPC sender validation', () => {
+  it('accepts only the expected resource origin', () => {
+    expect(isTrustedOrigin('app://karnama/index.html', 'app://karnama')).toBe(true)
+    expect(isTrustedOrigin('https://karnama.example/', 'app://karnama')).toBe(false)
+    expect(isTrustedOrigin('not-a-url', 'app://karnama')).toBe(false)
+  })
+
   it('accepts only the primary frame of the expected application window', () => {
     const sender = {}
     const frame = { url: 'app://karnama/index.html' }

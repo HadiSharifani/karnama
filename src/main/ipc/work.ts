@@ -54,6 +54,9 @@ export function registerWorkIpc(
   ipcMain.handle(ipcChannels.tasksUpdate, (event, input: unknown) =>
     wrap(event, () => service.updateTask(input))
   )
+  ipcMain.handle(ipcChannels.tasksMove, (event, input: unknown) =>
+    wrap(event, () => service.moveTask(input))
+  )
   ipcMain.handle(ipcChannels.tasksArchive, (event, input: unknown) =>
     wrap(event, () => service.archiveTask(input))
   )

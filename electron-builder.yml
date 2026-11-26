@@ -1,7 +1,7 @@
 appId: ir.karnama.desktop
 productName: کارنما
 directories:
-  output: dist
+  output: dist-phase6
   buildResources: resources
 files:
   - out/**/*
@@ -22,14 +22,18 @@ extraResources:
 # better-sqlite3 ships a platform-specific Node-API binary that has been loaded by Electron 45.
 npmRebuild: false
 win:
+  icon: resources/app.ico
   target:
     - target: nsis
       arch:
         - x64
-  artifactName: '${productName}-${version}-win-${arch}.${ext}'
+  artifactName: 'Karnama-${version}-win-${arch}.${ext}'
 nsis:
   oneClick: false
   perMachine: false
-  allowElevation: true
+  allowElevation: false
+  deleteAppDataOnUninstall: false
   createDesktopShortcut: true
   createStartMenuShortcut: true
+  installerIcon: resources/app.ico
+  uninstallerIcon: resources/app.ico

@@ -10,7 +10,9 @@ import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
+import { isValidTime24 } from '@/lib/time-format'
 import { unwrapResult } from '@/lib/api'
+import { BackupSettings } from './BackupSettings'
 
 const weekDays = [
   { isoDay: 6, label: 'ش' },
@@ -59,6 +61,9 @@ export function SettingsPage({
   onCompleted: (settings: SettingsDto) => void
 }) {
   const [form, setForm] = useState<SettingsInput>(() => inputFromSettings(settings))
+  const [boundaryDraft, setBoundaryDraft] = useState(() =>
+    formatBoundary(settings.workingHours.workDateBoundaryMinutes)
+  )
   const [saveState, setSaveState] = useState<'saved' | 'saving' | 'error'>('saved')
   const [saveMessage, setSaveMessage] = useState('')
   const [completing, setCompleting] = useState(false)
@@ -219,18 +224,26 @@ export function SettingsPage({
             <label className="block space-y-2 text-sm font-medium text-ink">
               مرز Work Date
               <Input
+                aria-invalid={!isValidTime24(boundaryDraft)}
                 dir="ltr"
+                inputMode="numeric"
+                maxLength={5}
                 onChange={(event) => {
-                  if (event.target.value) {
-                    updateWorkingHours(
-                      'workDateBoundaryMinutes',
-                      minutesFromBoundary(event.target.value)
-                    )
+                  const value = event.target.value
+                  setBoundaryDraft(value)
+                  if (isValidTime24(value)) {
+                    updateWorkingHours('workDateBoundaryMinutes', minutesFromBoundary(value))
                   }
                 }}
-                step="60"
-                type="time"
-                value={formatBoundary(form.workingHours.workDateBoundaryMinutes)}
+                onBlur={() => {
+                  if (!isValidTime24(boundaryDraft)) {
+                    setBoundaryDraft(formatBoundary(form.workingHours.workDateBoundaryMinutes))
+                  }
+                }}
+                pattern="(?:[01][0-9]|2[0-3]):[0-5][0-9]"
+                placeholder="06:00"
+                type="text"
+                value={boundaryDraft}
               />
               <span className="block text-xs font-normal text-muted">
                 شروع پیش‌فرض روز کاری: 06:00 به وقت منطقه انتخاب‌شده
@@ -331,6 +344,11 @@ export function SettingsPage({
             </label>
           </div>
         </Card>
+
+        <BackupSettings
+          calendar={settings.preferences.calendar}
+          timeZoneId={settings.preferences.timezoneId}
+        />
       </div>
 
       {!settings.onboardingCompleted && (

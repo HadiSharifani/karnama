@@ -62,7 +62,66 @@ afterEach(() => {
 })
 
 describe('task and work-time service', () => {
-  it('archives tasks by default, retains sessions, and restores the task', () => {
+  it('persists per-status task positions and keeps active ordering through moves and restore', () => {
+    const { opened, service, reopen } = createService()
+    let restarted: ReturnType<typeof reopen> | undefined
+    try {
+      const first = service.createTask(taskInput('نخست'))
+      const second = service.createTask(taskInput('دوم'))
+      const third = service.createTask(taskInput('سوم'))
+
+      expect([first.position, second.position, third.position]).toEqual([0, 1, 2])
+      expect(first).toMatchObject({ linkCount: 0, attachmentCount: 0 })
+      service.moveTask({ id: third.id, status: 'todo', index: 0 })
+      expect(service.listTasks().map((task) => task.id)).toEqual([third.id, first.id, second.id])
+
+      service.moveTask({ id: second.id, status: 'in_progress', index: 0 })
+      expect(
+        service.listTasks().map(({ id, status, position }) => ({ id, status, position }))
+      ).toEqual([
+        { id: third.id, status: 'todo', position: 0 },
+        { id: first.id, status: 'todo', position: 1 },
+        { id: second.id, status: 'in_progress', position: 0 }
+      ])
+
+      service.archiveTask({ id: third.id })
+      service.restoreTask({ id: third.id })
+      restarted = reopen()
+      expect(
+        restarted.service.listTasks().map(({ id, status, position }) => ({ id, status, position }))
+      ).toEqual([
+        { id: first.id, status: 'todo', position: 0 },
+        { id: third.id, status: 'todo', position: 1 },
+        { id: second.id, status: 'in_progress', position: 0 }
+      ])
+    } finally {
+      opened.close()
+      restarted?.opened.close()
+    }
+  })
+
+  it('archives a task without sessions and restores it without creating history', () => {
+    const { opened, service } = createService()
+    try {
+      const task = service.createTask(taskInput('بدون جلسه'))
+      const archived = service.archiveTask({ id: task.id })
+
+      expect(archived.archivedAtUtcMs).not.toBeNull()
+      expect(service.archiveTask({ id: task.id }).archivedAtUtcMs).toBe(archived.archivedAtUtcMs)
+      expect(service.listSessions()).toEqual([])
+      expect(service.listTasks({ includeArchived: true })[0]).toMatchObject({
+        trackedDurationMs: 0,
+        sessionCount: 0
+      })
+      service.restoreTask({ id: task.id })
+      expect(service.listTasks()[0].archivedAtUtcMs).toBeNull()
+      expect(service.listSessions()).toEqual([])
+    } finally {
+      opened.close()
+    }
+  })
+
+  it('retains historical sessions when archiving and restores their task summary', () => {
     const { opened, service } = createService()
     try {
       const task = service.createTask(taskInput('طراحی صفحه اصلی'))
@@ -73,8 +132,8 @@ describe('task and work-time service', () => {
       expect(service.listTasks({ includeArchived: true })[0]).toMatchObject({
         id: task.id,
         archivedAtUtcMs: expect.any(Number),
-        trackedDurationMs: 60 * 60 * 1000,
-        sessionCount: 1
+        trackedDurationMs: 0,
+        sessionCount: 0
       })
       expect(service.listSessions()[0]).toMatchObject({
         id: session.id,
@@ -83,22 +142,81 @@ describe('task and work-time service', () => {
       })
 
       service.restoreTask({ id: task.id })
-      expect(service.listTasks()[0].archivedAtUtcMs).toBeNull()
+      expect(service.listTasks()[0]).toMatchObject({
+        archivedAtUtcMs: null,
+        trackedDurationMs: 60 * 60 * 1000,
+        sessionCount: 1
+      })
     } finally {
       opened.close()
     }
   })
 
-  it('does not archive a task while its timer run is still open', () => {
-    const { opened, service } = createService()
+  it('closes an active timer at the archive timestamp and prevents later timer activity', () => {
+    const { opened, service, advance } = createService()
+    try {
+      const task = service.createTask(taskInput('تسک با تایمر فعال'))
+      const run = service.startTimer({ taskId: task.id }).run!
+      advance(30 * 60_000)
+
+      const archived = service.archiveTask({ id: task.id })
+      const session = service.listSessions()[0]
+      expect(archived.archivedAtUtcMs).toBe(session.endUtcMs)
+      expect(session).toMatchObject({
+        taskId: task.id,
+        timerRunId: run.id,
+        source: 'timer',
+        startUtcMs: run.startedAtUtcMs
+      })
+      expect(session.durationMs).toBe(30 * 60_000)
+      expect(service.timerState().run).toBeNull()
+      expect(() => service.resumeTimer({ runId: run.id })).toThrow(WorkDomainError)
+      expect(() => service.startTimer({ taskId: task.id })).toThrow(WorkDomainError)
+
+      advance(60 * 60_000)
+      expect(service.timerState().run).toBeNull()
+      expect(service.listSessions()).toHaveLength(1)
+      service.restoreTask({ id: task.id })
+      expect(service.startTimer({ taskId: task.id }).run?.taskId).toBe(task.id)
+    } finally {
+      opened.close()
+    }
+  })
+
+  it('stops a paused timer when its task is archived', () => {
+    const { opened, service, advance } = createService()
     try {
       const task = service.createTask(taskInput('تسک با تایمر مکث‌شده'))
       const run = service.startTimer({ taskId: task.id }).run!
+      advance(30 * 60_000)
       service.pauseTimer({ runId: run.id })
+      expect(service.timerState().run?.status).toBe('paused')
+
+      service.archiveTask({ id: task.id })
+      expect(service.timerState().run).toBeNull()
+      expect(service.listSessions()).toHaveLength(1)
+    } finally {
+      opened.close()
+    }
+  })
+
+  it('requires an unresolved recovery interval to be reviewed before archiving', () => {
+    const { opened, service, advance } = createService()
+    try {
+      const task = service.createTask(taskInput('تسک با بازیابی بررسی‌نشده'))
+      const run = service.startTimer({ taskId: task.id }).run!
+      service.checkpointRunningTimer()
+      advance(30 * 60_000)
+      service.recoverInterruptedTimer()
 
       expect(() => service.archiveTask({ id: task.id })).toThrow(WorkDomainError)
-      service.stopTimer({ runId: run.id })
-      expect(service.archiveTask({ id: task.id }).archivedAtUtcMs).not.toBeNull()
+      expect(service.listTasks()).toHaveLength(1)
+      service.reviewRecovery({ runId: run.id, decision: 'accept' })
+
+      const archived = service.archiveTask({ id: task.id })
+      expect(archived.archivedAtUtcMs).not.toBeNull()
+      expect(service.listSessions()).toHaveLength(1)
+      expect(service.timerState().run).toBeNull()
     } finally {
       opened.close()
     }

@@ -13,15 +13,23 @@ export const taskInputSchema = z.object({
 })
 
 export const taskListInputSchema = z.object({ includeArchived: z.boolean().default(false) })
+export const taskMoveInputSchema = z.object({
+  id: z.string().uuid(),
+  status: z.enum(taskStatuses),
+  index: z.number().int().min(0).max(1_000_000)
+})
 
 export const taskDtoSchema = taskInputSchema.extend({
   id: z.string().uuid(),
+  position: z.number().int().nonnegative(),
   createdAtUtcMs: z.number().int(),
   updatedAtUtcMs: z.number().int(),
   completedAtUtcMs: z.number().int().nullable(),
   archivedAtUtcMs: z.number().int().nullable(),
   trackedDurationMs: z.number().int().nonnegative(),
-  sessionCount: z.number().int().nonnegative()
+  sessionCount: z.number().int().nonnegative(),
+  linkCount: z.number().int().nonnegative(),
+  attachmentCount: z.number().int().nonnegative()
 })
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'تاریخ را به شکل میلادی معتبر وارد کنید.')
@@ -115,6 +123,7 @@ export const workSessionUpdateSchema = z.object({
 
 export type TaskInput = z.infer<typeof taskInputSchema>
 export type TaskDto = z.infer<typeof taskDtoSchema>
+export type TaskMoveInput = z.infer<typeof taskMoveInputSchema>
 export type WorkSessionInput = z.infer<typeof workSessionInputSchema>
 export type WorkSessionDto = z.infer<typeof workSessionDtoSchema>
 export type TimerStateDto = z.infer<typeof timerStateDtoSchema>

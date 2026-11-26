@@ -8,6 +8,8 @@ import { SettingsPage } from '@/features/settings/SettingsPage'
 import { TasksPage } from '@/features/tasks/TasksPage'
 import { TimerPage } from '@/features/timer/TimerPage'
 import { CalendarPage } from '@/features/calendar/CalendarPage'
+import { AnalyticsPage } from '@/features/analytics/AnalyticsPage'
+import { ReportsPage } from '@/features/reports/ReportsPage'
 import { unwrapResult } from '@/lib/api'
 import type { SettingsDto } from '@shared/contracts/settings'
 import type { TimerStateDto } from '@shared/contracts/work'
@@ -200,8 +202,19 @@ export function App() {
         />
       ) : activeRoute === 'calendar' ? (
         <CalendarPage settings={settings} />
+      ) : activeRoute === 'analytics' ? (
+        <AnalyticsPage settings={settings} />
+      ) : activeRoute === 'reports' ? (
+        <ReportsPage settings={settings} />
       ) : (
-        <EmptyPage page={activeRoute as Exclude<RouteId, 'dashboard' | 'settings' | 'calendar'>} />
+        <EmptyPage
+          page={
+            activeRoute as Exclude<
+              RouteId,
+              'dashboard' | 'settings' | 'calendar' | 'analytics' | 'reports'
+            >
+          }
+        />
       )}
     </AppShell>
   )

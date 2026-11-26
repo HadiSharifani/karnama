@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest'
 import {
   calendarDateParts,
   calendarMonthGrid,
-  calendarMonthRange
+  calendarMonthRange,
+  isoDateInTimezone
 } from '../../src/shared/domain/calendar-date'
 
 describe('calendar date conversion', () => {
@@ -29,5 +30,10 @@ describe('calendar date conversion', () => {
     const grid = calendarMonthGrid(2024, 2, 'gregorian')
     expect(grid.days.filter((day) => day.inMonth)).toHaveLength(29)
     expect(new Date(`${grid.days[0].isoDate}T00:00:00Z`).getUTCDay()).toBe(6)
+  })
+
+  it('derives canonical ISO dates from the configured timezone', () => {
+    expect(isoDateInTimezone('Asia/Tehran', Date.UTC(2024, 2, 19, 23, 30))).toBe('2024-03-20')
+    expect(isoDateInTimezone('America/Los_Angeles', Date.UTC(2024, 2, 20, 1, 0))).toBe('2024-03-19')
   })
 })

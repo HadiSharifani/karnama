@@ -29,6 +29,10 @@ export function openKarnamaDatabase(options: OpenDatabaseOptions) {
 
   return {
     database,
+    backupTo: (
+      destinationPath: string,
+      onProgress: (progress: { totalPages: number; remainingPages: number }) => number
+    ) => sqlite.backup(destinationPath, { progress: onProgress }),
     close: () => {
       if (!closed) {
         closed = true

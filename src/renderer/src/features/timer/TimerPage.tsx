@@ -12,99 +12,31 @@ import {
   Trash2
 } from 'lucide-react'
 import type { SettingsDto } from '@shared/contracts/settings'
-import type {
-  TaskDto,
-  TimerStateDto,
-  WorkSessionDto,
-  WorkSessionInput
-} from '@shared/contracts/work'
-import {
-  localDateTimeCandidates,
-  localDateTimeParts,
-  localDateTimePartsPrecise,
-  localDateTimeToUtc
-} from '@shared/domain/work-time'
+import type { TaskDto, TimerStateDto, WorkSessionDto } from '@shared/contracts/work'
+import { localDateTimeParts } from '@shared/domain/work-time'
 import { PageHeading } from '@/components/PageHeading'
+import { CalendarDatePicker } from '@/components/CalendarDatePicker'
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
-import { formatDuration, formatInstant, formatIsoDate } from '@/lib/time-format'
+import { formatDuration, formatInstant, formatIsoDate, isValidTime24 } from '@/lib/time-format'
 import { unwrapResult } from '@/lib/api'
 import type { TimerAction } from '@/lib/timer-action'
+import {
+  manualSessionDurationMs,
+  manualSessionFormFromSession,
+  manualSessionInput,
+  manualSessionStartChoices,
+  newManualSessionForm,
+  type ManualSessionForm
+} from '@/lib/manual-session'
 
 const hour = 60 * 60 * 1000
 
-function newSessionForm(timeZoneId: string): WorkSessionInput {
-  const end = localDateTimeParts(Date.now(), timeZoneId)
+function newSessionForm(timeZoneId: string): ManualSessionForm {
   const start = localDateTimeParts(Date.now() - hour, timeZoneId)
-  return {
-    taskId: null,
-    startDate: start.date,
-    startTime: start.time,
-    startOccurrence: null,
-    endDate: end.date,
-    endTime: end.time,
-    endOccurrence: null,
-    allocationMode: 'boundary',
-    workDate: null
-  }
-}
-
-function inputFromSession(session: WorkSessionDto): WorkSessionInput {
-  const start = localDateTimePartsPrecise(session.startUtcMs, session.timeZoneId)
-  const end = localDateTimePartsPrecise(session.endUtcMs, session.timeZoneId)
-  return {
-    taskId: session.taskId,
-    startDate: start.date,
-    startTime: start.time,
-    startOccurrence: occurrenceForInstant(
-      session.startUtcMs,
-      start.date,
-      start.time,
-      session.timeZoneId
-    ),
-    endDate: end.date,
-    endTime: end.time,
-    endOccurrence: occurrenceForInstant(session.endUtcMs, end.date, end.time, session.timeZoneId),
-    allocationMode: session.allocationMode,
-    workDate:
-      session.allocationMode === 'manual' ? (session.allocations[0]?.workDate ?? start.date) : null
-  }
-}
-
-function occurrenceForInstant(
-  instantUtcMs: number,
-  date: string,
-  time: string,
-  timeZoneId: string
-): 'earlier' | 'later' | null {
-  const candidates = localDateTimeCandidates(date, time, timeZoneId)
-  if (candidates.length < 2) return null
-  return candidates[0] === instantUtcMs ? 'earlier' : 'later'
-}
-
-function timeCandidates(date: string, time: string, timeZoneId: string) {
-  try {
-    return localDateTimeCandidates(date, time, timeZoneId)
-  } catch {
-    return []
-  }
-}
-
-function localDuration(form: WorkSessionInput, timeZoneId: string) {
-  try {
-    const start = localDateTimeToUtc(
-      form.startDate,
-      form.startTime,
-      timeZoneId,
-      form.startOccurrence
-    )
-    const end = localDateTimeToUtc(form.endDate, form.endTime, timeZoneId, form.endOccurrence)
-    return end > start ? end - start : null
-  } catch {
-    return null
-  }
+  return newManualSessionForm(start.date, start.time)
 }
 
 function OccurrenceSelect({
@@ -151,7 +83,7 @@ export function TimerPage({
   const [tasks, setTasks] = useState<TaskDto[]>([])
   const [sessions, setSessions] = useState<WorkSessionDto[]>([])
   const [timerTaskId, setTimerTaskId] = useState('')
-  const [sessionForm, setSessionForm] = useState<WorkSessionInput>(() =>
+  const [sessionForm, setSessionForm] = useState<ManualSessionForm>(() =>
     newSessionForm(settings.preferences.timezoneId)
   )
   const [sessionZoneId, setSessionZoneId] = useState(settings.preferences.timezoneId)
@@ -181,16 +113,25 @@ export function TimerPage({
   }, [loadData])
 
   const activeTasks = useMemo(() => tasks.filter((task) => task.archivedAtUtcMs === null), [tasks])
-  const formDuration = localDuration(sessionForm, sessionZoneId)
-  const startChoices = timeCandidates(sessionForm.startDate, sessionForm.startTime, sessionZoneId)
-  const endChoices = timeCandidates(sessionForm.endDate, sessionForm.endTime, sessionZoneId)
+  const formDuration = manualSessionDurationMs(sessionForm)
+  const startChoices = manualSessionStartChoices(sessionForm, sessionZoneId)
   const currentRun = timerState.run
 
-  function updateSession<Key extends keyof WorkSessionInput>(
+  function updateSession<Key extends keyof ManualSessionForm>(
     key: Key,
-    value: WorkSessionInput[Key]
+    value: ManualSessionForm[Key]
   ) {
-    setSessionForm((current) => ({ ...current, [key]: value }))
+    setSessionForm((current) => {
+      if (current[key] === value) return current
+      const next = { ...current, [key]: value }
+      if (key === 'startDate' || key === 'startTime') {
+        next.startOccurrence = null
+        next.exactStartDate = null
+        next.exactStartTime = null
+      }
+      if (key === 'durationHours' || key === 'durationMinutes') next.durationRemainderMs = 0
+      return next
+    })
   }
 
   async function saveSession(event: FormEvent<HTMLFormElement>) {
@@ -198,9 +139,10 @@ export function TimerPage({
     setSavingSession(true)
     setError('')
     try {
+      const input = manualSessionInput(sessionForm, sessionZoneId)
       const nextSessions = editingSessionId
-        ? unwrapResult(await window.karnama.sessions.update(editingSessionId, sessionForm))
-        : unwrapResult(await window.karnama.sessions.create(sessionForm))
+        ? unwrapResult(await window.karnama.sessions.update(editingSessionId, input))
+        : unwrapResult(await window.karnama.sessions.create(input))
       setSessions(nextSessions)
       setEditingSessionId(null)
       setSessionForm(newSessionForm(settings.preferences.timezoneId))
@@ -214,7 +156,7 @@ export function TimerPage({
 
   function editSession(session: WorkSessionDto) {
     setEditingSessionId(session.id)
-    setSessionForm(inputFromSession(session))
+    setSessionForm(manualSessionFormFromSession(session))
     setSessionZoneId(session.timeZoneId)
     setError('')
   }
@@ -262,22 +204,29 @@ export function TimerPage({
         {selectedArchivedTask && (
           <p className="text-xs text-warning">این جلسه به تسک بایگانی‌شده متصل می‌ماند.</p>
         )}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid gap-3 sm:grid-cols-2">
           <label className="block space-y-1.5 text-xs font-medium text-muted">
-            تاریخ شروع، میلادی
-            <Input
-              dir="ltr"
-              onChange={(event) => updateSession('startDate', event.target.value)}
-              required
-              type="date"
+            تاریخ شروع
+            <CalendarDatePicker
+              calendar={settings.preferences.calendar}
+              label="تاریخ شروع جلسه"
+              onChange={(value) => updateSession('startDate', value)}
+              timeZoneId={sessionZoneId}
               value={sessionForm.startDate}
             />
+          </label>
+          <label className="block space-y-1.5 text-xs font-medium text-muted">
+            ساعت شروع
             <Input
+              aria-invalid={!isValidTime24(sessionForm.startTime)}
               dir="ltr"
+              inputMode="numeric"
+              maxLength={5}
               onChange={(event) => updateSession('startTime', event.target.value)}
+              pattern="(?:[01][0-9]|2[0-3]):[0-5][0-9]"
+              placeholder="09:30"
               required
-              step="0.001"
-              type="time"
+              type="text"
               value={sessionForm.startTime}
             />
             <OccurrenceSelect
@@ -287,31 +236,38 @@ export function TimerPage({
               onChange={(value) => updateSession('startOccurrence', value)}
             />
           </label>
-          <label className="block space-y-1.5 text-xs font-medium text-muted">
-            تاریخ پایان، میلادی
-            <Input
-              dir="ltr"
-              onChange={(event) => updateSession('endDate', event.target.value)}
-              required
-              type="date"
-              value={sessionForm.endDate}
-            />
-            <Input
-              dir="ltr"
-              onChange={(event) => updateSession('endTime', event.target.value)}
-              required
-              step="0.001"
-              type="time"
-              value={sessionForm.endTime}
-            />
-            <OccurrenceSelect
-              label="ساعت پایان"
-              choices={endChoices}
-              value={sessionForm.endOccurrence}
-              onChange={(value) => updateSession('endOccurrence', value)}
-            />
-          </label>
         </div>
+        <fieldset className="space-y-2">
+          <legend className="text-xs font-medium text-muted">مدت کار</legend>
+          <div className="grid grid-cols-2 gap-3">
+            <label className="space-y-1.5 text-xs font-medium text-muted">
+              ساعت
+              <Input
+                dir="ltr"
+                inputMode="numeric"
+                min={0}
+                max={1_000_000}
+                onChange={(event) => updateSession('durationHours', event.target.value)}
+                required
+                type="number"
+                value={sessionForm.durationHours}
+              />
+            </label>
+            <label className="space-y-1.5 text-xs font-medium text-muted">
+              دقیقه
+              <Input
+                dir="ltr"
+                inputMode="numeric"
+                min={0}
+                max={59}
+                onChange={(event) => updateSession('durationMinutes', event.target.value)}
+                required
+                type="number"
+                value={sessionForm.durationMinutes}
+              />
+            </label>
+          </div>
+        </fieldset>
         <label className="block space-y-1.5 text-xs font-medium text-muted">
           تخصیص Work Date
           <Select
@@ -328,12 +284,12 @@ export function TimerPage({
         </label>
         {sessionForm.allocationMode === 'manual' && (
           <label className="block space-y-1.5 text-xs font-medium text-muted">
-            Work Date، میلادی
-            <Input
-              dir="ltr"
-              onChange={(event) => updateSession('workDate', event.target.value || null)}
-              required
-              type="date"
+            Work Date
+            <CalendarDatePicker
+              calendar={settings.preferences.calendar}
+              label="Work Date"
+              onChange={(value) => updateSession('workDate', value)}
+              timeZoneId={sessionZoneId}
               value={sessionForm.workDate ?? ''}
             />
           </label>
@@ -347,15 +303,16 @@ export function TimerPage({
           </span>
         </div>
         <p className="text-[11px] leading-5 text-muted">
-          ساعت ناموجود ناشی از تغییر منطقه زمانی قابل ثبت نیست؛ اگر ساعتی دو بار رخ دهد، بار اول یا
-          دوم را انتخاب کنید.
+          مدت با ساعت و دقیقه ثبت می‌شود و ثانیهٔ ورودی ندارد. اگر ساعت شروع در تغییر منطقه زمانی
+          وجود نداشته باشد، آن را به ساعت معتبر دیگری تغییر دهید.
         </p>
         <div className="flex flex-wrap gap-2">
           <Button
             disabled={
               savingSession ||
-              (startChoices.length > 1 && !sessionForm.startOccurrence) ||
-              (endChoices.length > 1 && !sessionForm.endOccurrence)
+              formDuration === null ||
+              startChoices.length === 0 ||
+              (startChoices.length > 1 && !sessionForm.startOccurrence)
             }
             type="submit"
           >

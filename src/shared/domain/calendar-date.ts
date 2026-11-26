@@ -19,6 +19,17 @@ export type CalendarMonth = {
   days: CalendarDate[]
 }
 
+export function isoDateInTimezone(timeZoneId: string, instantUtcMs = Date.now()) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: timeZoneId,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).formatToParts(instantUtcMs)
+  const values = Object.fromEntries(parts.map(({ type, value }) => [type, value]))
+  return `${values.year}-${values.month}-${values.day}`
+}
+
 const gregorianMonthLengths = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 
 function isoDate(year: number, month: number, day: number) {

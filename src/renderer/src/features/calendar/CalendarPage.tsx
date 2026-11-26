@@ -11,6 +11,7 @@ import type { CalendarMonthDto } from '@shared/contracts/calendar'
 import {
   calendarDateParts,
   calendarMonthGrid,
+  isoDateInTimezone,
   shiftCalendarMonth
 } from '@shared/domain/calendar-date'
 import type { SettingsDto } from '@shared/contracts/settings'
@@ -20,19 +21,9 @@ import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/ca
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { unwrapResult } from '@/lib/api'
+import { formatCalendarMonth, formatIsoDateLong, isValidTime24 } from '@/lib/time-format'
 
 const weekDays = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنج‌شنبه', 'جمعه']
-
-function localDateInTimezone(timezoneId: string) {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: timezoneId,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  }).formatToParts(Date.now())
-  const value = Object.fromEntries(parts.map(({ type, value }) => [type, value]))
-  return `${value.year}-${value.month}-${value.day}`
-}
 
 function formatMinutes(minutes: number) {
   const absolute = Math.abs(minutes)
@@ -42,28 +33,8 @@ function formatMinutes(minutes: number) {
   return `${minutes < 0 ? '−' : ''}${number.format(hours).padStart(2, '۰')}:${number.format(remainder).padStart(2, '۰')}`
 }
 
-function dateLabel(date: string, calendar: 'jalali' | 'gregorian') {
-  return new Intl.DateTimeFormat('fa-IR', {
-    calendar: calendar === 'jalali' ? 'persian' : 'gregory',
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC'
-  }).format(new Date(`${date}T12:00:00Z`))
-}
-
-function monthLabel(date: string, calendar: 'jalali' | 'gregorian') {
-  return new Intl.DateTimeFormat('fa-IR', {
-    calendar: calendar === 'jalali' ? 'persian' : 'gregory',
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC'
-  }).format(new Date(`${date}T12:00:00Z`))
-}
-
 function minutesFromTime(value: string) {
-  if (!value) return null
+  if (!isValidTime24(value)) return null
   const [hours, minutes] = value.split(':').map(Number)
   return hours * 60 + minutes
 }
@@ -90,7 +61,7 @@ function formatClock(instantUtcMs: number, timezoneId: string) {
 
 export function CalendarPage({ settings }: { settings: SettingsDto }) {
   const calendar = settings.preferences.calendar
-  const today = localDateInTimezone(settings.preferences.timezoneId)
+  const today = isoDateInTimezone(settings.preferences.timezoneId)
   const todayParts = calendarDateParts(today, calendar)
   const [year, setYear] = useState(todayParts.jy)
   const [month, setMonth] = useState(todayParts.jm)
@@ -396,7 +367,7 @@ export function CalendarPage({ settings }: { settings: SettingsDto }) {
             <div className="flex items-center gap-2">
               <CalendarDays aria-hidden="true" className="text-accent" size={18} />
               <h2 className="text-lg font-semibold text-ink">
-                {monthLabel(grid.startDate, calendar)}
+                {formatCalendarMonth(grid.year, grid.month, calendar)}
               </h2>
             </div>
             <p className="text-xs text-muted" aria-live="polite">
@@ -420,7 +391,7 @@ export function CalendarPage({ settings }: { settings: SettingsDto }) {
                 cell.isoDate <= (leaveEndDate ?? leaveStartDate)
               return (
                 <button
-                  aria-label={`${dateLabel(cell.isoDate, calendar)}${summary ? `، تعهد Work Date ${formatMinutes(summary.targetMinutes)}، فعالیت این تاریخ ${formatMinutes(summary.calendarActualMinutes)}` : ''}`}
+                  aria-label={`${formatIsoDateLong(cell.isoDate, calendar)}${summary ? `، تعهد Work Date ${formatMinutes(summary.targetMinutes)}، فعالیت این تاریخ ${formatMinutes(summary.calendarActualMinutes)}` : ''}`}
                   aria-pressed={selectedCell || inLeaveRange}
                   className={`flex min-h-[76px] flex-col items-start rounded-lg border p-2 text-right transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${selectedCell ? 'border-accent bg-accent-soft text-accent-ink' : inLeaveRange ? 'border-success/40 bg-success/10' : `border-transparent ${activityTone(summary?.calendarActualMinutes ?? 0)} hover:border-line hover:bg-subtle`} ${cell.inMonth ? '' : 'opacity-45'} ${summary?.isCurrentWorkDate ? 'ring-1 ring-accent/40' : ''}`}
                   key={cell.isoDate}
@@ -477,7 +448,7 @@ export function CalendarPage({ settings }: { settings: SettingsDto }) {
           <Card>
             <CardHeader className="mb-4">
               <CardTitle>
-                {selectedDate ? dateLabel(selectedDate, calendar) : 'جزئیات روز'}
+                {selectedDate ? formatIsoDateLong(selectedDate, calendar) : 'جزئیات روز'}
               </CardTitle>
               <CardDescription>جزئیات این روز بر اساس Work Date و زمان‌های ثبت‌شده</CardDescription>
             </CardHeader>
@@ -597,7 +568,7 @@ export function CalendarPage({ settings }: { settings: SettingsDto }) {
                     {leaveRangeMode && (
                       <p className="mb-2 text-[11px] leading-5 text-muted">
                         {leaveStartDate && leaveEndDate
-                          ? `از ${dateLabel(leaveStartDate, calendar)} تا ${dateLabel(leaveEndDate, calendar)}`
+                          ? `از ${formatIsoDateLong(leaveStartDate, calendar)} تا ${formatIsoDateLong(leaveEndDate, calendar)}`
                           : 'روز آغاز و سپس روز پایان را از تقویم انتخاب کنید.'}
                       </p>
                     )}
@@ -661,8 +632,13 @@ export function CalendarPage({ settings }: { settings: SettingsDto }) {
                     <div className="flex gap-2">
                       <Input
                         id="boundary"
+                        aria-invalid={!isValidTime24(boundary)}
                         dir="ltr"
-                        type="time"
+                        inputMode="numeric"
+                        maxLength={5}
+                        pattern="(?:[01][0-9]|2[0-3]):[0-5][0-9]"
+                        placeholder="06:00"
+                        type="text"
                         value={boundary}
                         onChange={(event) => setBoundary(event.target.value)}
                       />

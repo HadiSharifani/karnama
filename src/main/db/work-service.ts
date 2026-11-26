@@ -1,9 +1,24 @@
 import { randomUUID } from 'node:crypto'
-import { and, desc, eq, gt, inArray, isNotNull, isNull, lt, lte, ne, or, sql } from 'drizzle-orm'
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gt,
+  inArray,
+  isNotNull,
+  isNull,
+  lt,
+  lte,
+  ne,
+  or,
+  sql
+} from 'drizzle-orm'
 import {
   taskDtoSchema,
   taskInputSchema,
   taskListInputSchema,
+  taskMoveInputSchema,
   taskIdSchema,
   timerRecoveryReviewSchema,
   timerRunDtoSchema,
@@ -16,6 +31,7 @@ import {
   workSessionUpdateSchema,
   type TaskDto,
   type TaskInput,
+  type TaskMoveInput,
   type TimerStateDto,
   type WorkSessionDto,
   type WorkSessionInput
@@ -26,6 +42,7 @@ import {
   localDateTimeToUtc
 } from '../../shared/domain/work-time'
 import type { KarnamaDatabase } from './client'
+import { activeTaskTimeCondition } from './active-time-filter'
 import {
   appSettings,
   tasks,
@@ -96,21 +113,56 @@ export function createWorkService(database: KarnamaDatabase, options: ServiceOpt
     }
   }
 
+  function orderedActiveTaskIds(transaction: KarnamaTransaction, status: TaskInput['status']) {
+    return transaction
+      .select({ id: tasks.id })
+      .from(tasks)
+      .where(and(eq(tasks.status, status), isNull(tasks.archivedAtUtcMs)))
+      .orderBy(asc(tasks.position), asc(tasks.createdAtUtcMs), asc(tasks.id))
+      .all()
+      .map(({ id }) => id)
+  }
+
+  function normalizeTaskPositions(transaction: KarnamaTransaction, taskIds: string[]) {
+    taskIds.forEach((taskId, position) => {
+      transaction.update(tasks).set({ position }).where(eq(tasks.id, taskId)).run()
+    })
+  }
+
+  function nextTaskPosition(transaction: KarnamaTransaction, status: TaskInput['status']) {
+    const result = transaction
+      .select({ position: sql<number>`coalesce(max(${tasks.position}), -1)` })
+      .from(tasks)
+      .where(and(eq(tasks.status, status), isNull(tasks.archivedAtUtcMs)))
+      .get()
+    return (result?.position ?? -1) + 1
+  }
+
   function taskDto(transaction: KarnamaTransaction, taskId: string): TaskDto {
     const task = transaction.select().from(tasks).where(eq(tasks.id, taskId)).get()
     if (!task) throw new WorkDomainError('not_found', 'تسک پیدا نشد.')
     const total = transaction
       .select({
         durationMs: sql<number>`coalesce(sum(${workSessions.endUtcMs} - ${workSessions.startUtcMs}), 0)`,
-        sessionCount: sql<number>`count(*)`
+        sessionCount: sql<number>`count(*)`,
+        linkCount: sql<number>`(SELECT count(*) FROM task_links WHERE task_id = ${taskId})`,
+        attachmentCount: sql<number>`(SELECT count(*) FROM attachments WHERE task_id = ${taskId})`
       })
       .from(workSessions)
-      .where(eq(workSessions.taskId, taskId))
+      .leftJoin(tasks, eq(workSessions.taskId, tasks.id))
+      .where(
+        and(
+          eq(workSessions.taskId, taskId),
+          activeTaskTimeCondition(workSessions.taskId, tasks.id, tasks.archivedAtUtcMs)
+        )
+      )
       .get()
     return taskDtoSchema.parse({
       ...task,
       trackedDurationMs: total?.durationMs ?? 0,
-      sessionCount: total?.sessionCount ?? 0
+      sessionCount: total?.sessionCount ?? 0,
+      linkCount: total?.linkCount ?? 0,
+      attachmentCount: total?.attachmentCount ?? 0
     })
   }
 
@@ -125,7 +177,11 @@ export function createWorkService(database: KarnamaDatabase, options: ServiceOpt
         .select({ task: tasks })
         .from(tasks)
         .where(includeArchived ? undefined : isNull(tasks.archivedAtUtcMs))
-        .orderBy(desc(tasks.updatedAtUtcMs))
+        .orderBy(
+          sql`CASE ${tasks.status} WHEN 'todo' THEN 0 WHEN 'in_progress' THEN 1 WHEN 'waiting_feedback' THEN 2 WHEN 'on_hold' THEN 3 ELSE 4 END`,
+          asc(tasks.position),
+          desc(tasks.updatedAtUtcMs)
+        )
         .all()
       return rows.map(({ task }) => taskDto(transaction, task.id))
     })
@@ -141,6 +197,7 @@ export function createWorkService(database: KarnamaDatabase, options: ServiceOpt
         .values({
           id: taskId,
           ...task,
+          position: nextTaskPosition(transaction, task.status),
           createdAtUtcMs: timestamp,
           updatedAtUtcMs: timestamp,
           completedAtUtcMs: task.status === 'done' ? timestamp : null
@@ -159,40 +216,116 @@ export function createWorkService(database: KarnamaDatabase, options: ServiceOpt
       if (!current || current.archivedAtUtcMs !== null) {
         throw new WorkDomainError('not_found', 'تسک پیدا نشد یا بایگانی شده است.')
       }
+      const completedAtUtcMs =
+        task.status === 'done' ? (current.completedAtUtcMs ?? timestamp) : null
+      if (current.status === task.status) {
+        transaction
+          .update(tasks)
+          .set({ ...task, completedAtUtcMs, updatedAtUtcMs: timestamp })
+          .where(eq(tasks.id, taskId))
+          .run()
+        return
+      }
+      const sourceIds = orderedActiveTaskIds(transaction, current.status).filter(
+        (orderedId) => orderedId !== taskId
+      )
+      const targetIds = orderedActiveTaskIds(transaction, task.status).filter(
+        (orderedId) => orderedId !== taskId
+      )
       transaction
         .update(tasks)
         .set({
           ...task,
-          completedAtUtcMs: task.status === 'done' ? (current.completedAtUtcMs ?? timestamp) : null,
+          position: targetIds.length,
+          completedAtUtcMs,
           updatedAtUtcMs: timestamp
         })
         .where(eq(tasks.id, taskId))
         .run()
+      normalizeTaskPositions(transaction, sourceIds)
+      normalizeTaskPositions(transaction, [...targetIds, taskId])
+    })
+    return readTaskDto(taskId)
+  }
+
+  function moveTask(input: unknown) {
+    const { id: taskId, status, index }: TaskMoveInput = taskMoveInputSchema.parse(input)
+    const timestamp = now()
+    database.transaction((transaction) => {
+      const current = transaction.select().from(tasks).where(eq(tasks.id, taskId)).get()
+      if (!current || current.archivedAtUtcMs !== null) {
+        throw new WorkDomainError('not_found', 'تسک پیدا نشد یا بایگانی شده است.')
+      }
+
+      const sourceIds = orderedActiveTaskIds(transaction, current.status).filter(
+        (orderedId) => orderedId !== taskId
+      )
+      const targetIds =
+        current.status === status
+          ? sourceIds
+          : orderedActiveTaskIds(transaction, status).filter((orderedId) => orderedId !== taskId)
+      const destination = Math.min(index, targetIds.length)
+      targetIds.splice(destination, 0, taskId)
+
+      if (current.status !== status) {
+        transaction
+          .update(tasks)
+          .set({
+            status,
+            completedAtUtcMs: status === 'done' ? (current.completedAtUtcMs ?? timestamp) : null,
+            updatedAtUtcMs: timestamp
+          })
+          .where(eq(tasks.id, taskId))
+          .run()
+        normalizeTaskPositions(transaction, sourceIds)
+      }
+      normalizeTaskPositions(transaction, targetIds)
     })
     return readTaskDto(taskId)
   }
 
   function archiveTask(input: unknown) {
     const { id: taskId } = taskIdSchema.parse(input)
-    const timestamp = now()
     database.transaction((transaction) => {
       const task = transaction.select().from(tasks).where(eq(tasks.id, taskId)).get()
       if (!task) throw new WorkDomainError('not_found', 'تسک پیدا نشد.')
-      const running = transaction
-        .select({ id: timerRuns.id })
+      const timestamp = task.archivedAtUtcMs ?? now()
+      const openRuns = transaction
+        .select()
         .from(timerRuns)
         .where(and(inArray(timerRuns.status, ['running', 'paused']), eq(timerRuns.taskId, taskId)))
-        .get()
-      if (running)
+        .all()
+      if (task.archivedAtUtcMs !== null && openRuns.length === 0) return
+      if (
+        openRuns.some(
+          (run) => run.recoveryStartUtcMs !== null && run.recoveryReviewedAtUtcMs === null
+        )
+      ) {
         throw new WorkDomainError(
           'conflict',
-          'پیش از بایگانی تسک، اجرای تایمر مربوط را متوقف کنید.'
+          'پیش از بایگانی تسک، بازهٔ بازیابی تایمر را بررسی کنید.'
         )
-      transaction
-        .update(tasks)
-        .set({ archivedAtUtcMs: timestamp, updatedAtUtcMs: timestamp })
-        .where(eq(tasks.id, taskId))
-        .run()
+      }
+      for (const run of openRuns) {
+        if (run.status === 'running') closeTimerSegment(transaction, run, timestamp)
+        transaction
+          .update(timerRuns)
+          .set({
+            status: 'stopped',
+            currentSegmentStartedAtUtcMs: null,
+            checkpointAtUtcMs: timestamp,
+            updatedAtUtcMs: timestamp
+          })
+          .where(eq(timerRuns.id, run.id))
+          .run()
+      }
+      if (task.archivedAtUtcMs === null) {
+        transaction
+          .update(tasks)
+          .set({ archivedAtUtcMs: timestamp, updatedAtUtcMs: timestamp })
+          .where(eq(tasks.id, taskId))
+          .run()
+      }
     })
     return readTaskDto(taskId)
   }
@@ -202,16 +335,19 @@ export function createWorkService(database: KarnamaDatabase, options: ServiceOpt
     const timestamp = now()
     database.transaction((transaction) => {
       const task = transaction
-        .select({ id: tasks.id })
+        .select({ id: tasks.id, status: tasks.status, archivedAtUtcMs: tasks.archivedAtUtcMs })
         .from(tasks)
         .where(eq(tasks.id, taskId))
         .get()
       if (!task) throw new WorkDomainError('not_found', 'تسک پیدا نشد.')
+      if (task.archivedAtUtcMs === null) return
+      const activeIds = orderedActiveTaskIds(transaction, task.status)
       transaction
         .update(tasks)
-        .set({ archivedAtUtcMs: null, updatedAtUtcMs: timestamp })
+        .set({ archivedAtUtcMs: null, position: activeIds.length, updatedAtUtcMs: timestamp })
         .where(eq(tasks.id, taskId))
         .run()
+      normalizeTaskPositions(transaction, [...activeIds, taskId])
     })
     return readTaskDto(taskId)
   }
@@ -479,7 +615,12 @@ export function createWorkService(database: KarnamaDatabase, options: ServiceOpt
       .select({ run: timerRuns, taskTitle: tasks.title })
       .from(timerRuns)
       .leftJoin(tasks, eq(timerRuns.taskId, tasks.id))
-      .where(or(eq(timerRuns.status, 'running'), eq(timerRuns.status, 'paused')))
+      .where(
+        and(
+          or(eq(timerRuns.status, 'running'), eq(timerRuns.status, 'paused')),
+          activeTaskTimeCondition(timerRuns.taskId, tasks.id, tasks.archivedAtUtcMs)
+        )
+      )
       .orderBy(desc(timerRuns.updatedAtUtcMs))
       .limit(1)
       .get()
@@ -491,7 +632,13 @@ export function createWorkService(database: KarnamaDatabase, options: ServiceOpt
           durationMs: sql<number>`coalesce(sum(${workSessions.endUtcMs} - ${workSessions.startUtcMs}), 0)`
         })
         .from(workSessions)
-        .where(eq(workSessions.timerRunId, run.run.id))
+        .leftJoin(tasks, eq(workSessions.taskId, tasks.id))
+        .where(
+          and(
+            eq(workSessions.timerRunId, run.run.id),
+            activeTaskTimeCondition(workSessions.taskId, tasks.id, tasks.archivedAtUtcMs)
+          )
+        )
         .get()?.durationMs ?? 0
     const activeMs =
       run.run.status === 'running' && run.run.currentSegmentStartedAtUtcMs !== null
@@ -630,6 +777,7 @@ export function createWorkService(database: KarnamaDatabase, options: ServiceOpt
       if (!run || run.status !== 'paused') {
         throw new WorkDomainError('conflict', 'تایمر مکث‌شده پیدا نشد.')
       }
+      requireTask(transaction, run.taskId)
       if (run.recoveryStartUtcMs !== null && run.recoveryReviewedAtUtcMs === null) {
         throw new WorkDomainError(
           'recovery_required',
@@ -780,6 +928,7 @@ export function createWorkService(database: KarnamaDatabase, options: ServiceOpt
     listTasks,
     createTask,
     updateTask,
+    moveTask,
     archiveTask,
     restoreTask,
     listSessions,

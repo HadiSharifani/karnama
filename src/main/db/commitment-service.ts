@@ -19,6 +19,7 @@ import {
   workDateAtInstant
 } from '../../shared/domain/work-time'
 import type { KarnamaDatabase } from './client'
+import { activeTaskTimeCondition } from './active-time-filter'
 import {
   appSettings,
   holidays,
@@ -92,6 +93,49 @@ export function createCommitmentService(database: KarnamaDatabase, options: Serv
       currentSettings.workDateBoundaryMinutes,
       (date) => defaultBoundary(transaction, date, currentSettings.workDateBoundaryMinutes)
     )
+  }
+
+  function currentTimerSegment(transaction: KarnamaTransaction) {
+    const row = transaction
+      .select({ run: timerRuns, taskTitle: tasks.title })
+      .from(timerRuns)
+      .leftJoin(tasks, eq(timerRuns.taskId, tasks.id))
+      .where(
+        and(
+          eq(timerRuns.status, 'running'),
+          activeTaskTimeCondition(timerRuns.taskId, tasks.id, tasks.archivedAtUtcMs)
+        )
+      )
+      .get()
+    const startUtcMs = row?.run.currentSegmentStartedAtUtcMs
+    const endUtcMs = now()
+    if (!row || startUtcMs === null || startUtcMs === undefined || endUtcMs <= startUtcMs) {
+      return null
+    }
+
+    return {
+      run: row.run,
+      taskTitle: row.taskTitle,
+      startUtcMs,
+      endUtcMs,
+      timeZoneId: row.run.timeZoneId,
+      workDateAllocations: allocateSessionByBoundary(
+        startUtcMs,
+        endUtcMs,
+        row.run.timeZoneId,
+        row.run.workDateBoundaryMinutes,
+        (date) => defaultBoundary(transaction, date, row.run.workDateBoundaryMinutes)
+      ),
+      calendarDateAllocations: allocateSessionByCalendarDate(
+        startUtcMs,
+        endUtcMs,
+        row.run.timeZoneId
+      )
+    }
+  }
+
+  function getCurrentTimerSegment() {
+    return database.transaction((transaction) => currentTimerSegment(transaction))
   }
 
   function assertHistoricalAllowed(
@@ -321,7 +365,8 @@ export function createCommitmentService(database: KarnamaDatabase, options: Serv
         .where(
           and(
             gte(workDateAllocations.workDate, period.startDate),
-            lte(workDateAllocations.workDate, period.endDate)
+            lte(workDateAllocations.workDate, period.endDate),
+            activeTaskTimeCondition(workSessions.taskId, tasks.id, tasks.archivedAtUtcMs)
           )
         )
         .all()
@@ -364,7 +409,8 @@ export function createCommitmentService(database: KarnamaDatabase, options: Serv
         .where(
           and(
             lte(workSessions.startUtcMs, rangeEndUtcMs + 36 * 60 * 60 * 1000),
-            gte(workSessions.endUtcMs, rangeStartUtcMs - 36 * 60 * 60 * 1000)
+            gte(workSessions.endUtcMs, rangeStartUtcMs - 36 * 60 * 60 * 1000),
+            activeTaskTimeCondition(workSessions.taskId, tasks.id, tasks.archivedAtUtcMs)
           )
         )
         .all()
@@ -398,66 +444,38 @@ export function createCommitmentService(database: KarnamaDatabase, options: Serv
         }
       }
 
-      const timer = transaction
-        .select()
-        .from(timerRuns)
-        .where(eq(timerRuns.status, 'running'))
-        .get()
-      if (
-        timer?.currentSegmentStartedAtUtcMs !== null &&
-        timer?.currentSegmentStartedAtUtcMs !== undefined
-      ) {
-        const endUtcMs = now()
-        if (endUtcMs > timer.currentSegmentStartedAtUtcMs) {
-          const allocations = allocateSessionByBoundary(
-            timer.currentSegmentStartedAtUtcMs,
-            endUtcMs,
-            timer.timeZoneId,
-            timer.workDateBoundaryMinutes,
-            (date) => defaultBoundary(transaction, date, timer.workDateBoundaryMinutes)
+      const activeTimer = currentTimerSegment(transaction)
+      if (activeTimer) {
+        for (const allocation of activeTimer.workDateAllocations) {
+          if (allocation.workDate < period.startDate || allocation.workDate > period.endDate)
+            continue
+          actualMs.set(
+            allocation.workDate,
+            (actualMs.get(allocation.workDate) ?? 0) + allocation.endUtcMs - allocation.startUtcMs
           )
-          for (const allocation of allocations) {
-            if (allocation.workDate < period.startDate || allocation.workDate > period.endDate)
-              continue
-            actualMs.set(
-              allocation.workDate,
-              (actualMs.get(allocation.workDate) ?? 0) + allocation.endUtcMs - allocation.startUtcMs
-            )
-          }
-          const taskTitle = timer.taskId
-            ? (transaction
-                .select({ title: tasks.title })
-                .from(tasks)
-                .where(eq(tasks.id, timer.taskId))
-                .get()?.title ?? null)
-            : null
-          for (const allocation of allocateSessionByCalendarDate(
-            timer.currentSegmentStartedAtUtcMs,
-            endUtcMs,
-            timer.timeZoneId
-          )) {
-            if (
-              allocation.calendarDate < period.startDate ||
-              allocation.calendarDate > period.endDate
-            )
-              continue
-            const durationMs = allocation.endUtcMs - allocation.startUtcMs
-            calendarActualMs.set(
-              allocation.calendarDate,
-              (calendarActualMs.get(allocation.calendarDate) ?? 0) + durationMs
-            )
-            const dateSessions = calendarSessionsByDate.get(allocation.calendarDate) ?? []
-            dateSessions.push({
-              id: timer.id,
-              taskTitle,
-              startUtcMs: allocation.startUtcMs,
-              endUtcMs: allocation.endUtcMs,
-              durationMinutes: Math.floor(durationMs / 60_000),
-              timeZoneId: timer.timeZoneId,
-              source: 'timer'
-            })
-            calendarSessionsByDate.set(allocation.calendarDate, dateSessions)
-          }
+        }
+        for (const allocation of activeTimer.calendarDateAllocations) {
+          if (
+            allocation.calendarDate < period.startDate ||
+            allocation.calendarDate > period.endDate
+          )
+            continue
+          const durationMs = allocation.endUtcMs - allocation.startUtcMs
+          calendarActualMs.set(
+            allocation.calendarDate,
+            (calendarActualMs.get(allocation.calendarDate) ?? 0) + durationMs
+          )
+          const dateSessions = calendarSessionsByDate.get(allocation.calendarDate) ?? []
+          dateSessions.push({
+            id: activeTimer.run.id,
+            taskTitle: activeTimer.taskTitle,
+            startUtcMs: allocation.startUtcMs,
+            endUtcMs: allocation.endUtcMs,
+            durationMinutes: Math.floor(durationMs / 60_000),
+            timeZoneId: activeTimer.timeZoneId,
+            source: 'timer'
+          })
+          calendarSessionsByDate.set(allocation.calendarDate, dateSessions)
         }
       }
 
@@ -681,6 +699,7 @@ export function createCommitmentService(database: KarnamaDatabase, options: Serv
 
   return {
     calendarMonth,
+    getCurrentTimerSegment,
     setMonthlyOverride,
     setDayOverride,
     setHoliday,
