@@ -5,6 +5,8 @@ dist-phase2/
 dist-phase*/
 dist-v0.1.0-release/
 dist-v0.1.0-release-unsigned/
+dist-release-audit/
+.local-backups/
 coverage/
 playwright-report/
 test-results/

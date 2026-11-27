@@ -38,7 +38,7 @@ For first launch and setup, see [Getting Started (English)](docs/GETTING_STARTED
 
 ## System requirements
 
-- Windows x64. The installer was verified on Windows 10 Pro x64.
+- Windows x64. The installer was verified on Windows 11 Pro x64, version 26H2 (build `26300.9818`). Windows 10 has not been separately validated.
 - Windows 32-bit is **not supported in v0.1.0**. macOS, Linux, and Windows ARM64 are not release targets.
 - Internet access is not required for core features after installation. Opening external task links uses the system browser.
 - End users do not need to install Node.js. Developers need Node.js `24.13.0` or later and npm.
@@ -52,11 +52,13 @@ For first launch and setup, see [Getting Started (English)](docs/GETTING_STARTED
 - [User Guide](docs/USER_GUIDE_EN.md)
 - [FAQ](docs/FAQ_EN.md)
 - [System Requirements](docs/SYSTEM_REQUIREMENTS.md)
+- [Employee Guide (Persian)](EMPLOYEE_GUIDE_FA.md)
 - [Privacy and Security](docs/PRIVACY_AND_SECURITY.md)
 - [Release Notes v0.1.0](docs/RELEASE_NOTES_0.1.0.md)
 
 ### فارسی
 
+- [راهنمای کارمندان (فارسی)](EMPLOYEE_GUIDE_FA.md)
 - [شروع کار](docs/GETTING_STARTED_FA.md)
 - [راهنمای کاربر](docs/USER_GUIDE_FA.md)
 - [مدیریت تسک‌ها](docs/TASK_MANAGEMENT_FA.md)
@@ -122,7 +124,7 @@ Packaging and verified v0.1.0 installer evidence are documented in [RELEASE.md](
 
 ### نصب و نیازمندی‌ها
 
-فایل `Karnama-0.1.0-win-x64.exe` را از [صفحهٔ انتشار](https://github.com/HadiSharifani/karnama/releases/latest) دریافت و SHA-256 آن را با `SHA256SUMS.txt` تطبیق دهید. نصب‌کنندهٔ per-user دسترسی Administrator نمی‌خواهد اما امضای دیجیتال ندارد و ممکن است هشدار Windows نمایش داده شود. برای قابلیت‌های اصلی پس از نصب اینترنت لازم نیست. Windows 32-bit در v0.1.0 پشتیبانی نمی‌شود؛ macOS، Linux و ARM64 نیز هدف انتشار نیستند.
+فایل `Karnama-0.1.0-win-x64.exe` را از [صفحهٔ انتشار](https://github.com/HadiSharifani/karnama/releases/latest) دریافت و SHA-256 آن را با `SHA256SUMS.txt` تطبیق دهید. نصب‌کنندهٔ per-user دسترسی Administrator نمی‌خواهد اما امضای دیجیتال ندارد و ممکن است هشدار Windows نمایش داده شود. قابلیت‌های اصلی پس از نصب به اینترنت نیاز ندارند. installer روی Windows 11 Pro x64 نسخهٔ 26H2، build `26300.9818` آزموده شده است؛ Windows 10 جداگانه اعتبارسنجی نشده است. Windows 32-bit پشتیبانی نمی‌شود؛ macOS، Linux و ARM64 نیز هدف انتشار نیستند.
 
 ### حریم خصوصی و پشتیبان
 
@@ -130,7 +132,7 @@ Packaging and verified v0.1.0 installer evidence are documented in [RELEASE.md](
 
 ### مستندات
 
-برای شروع به [راهنمای فارسی](docs/GETTING_STARTED_FA.md) بروید. جزئیات در راهنمای [مدیریت تسک](docs/TASK_MANAGEMENT_FA.md)، [تقویم و زمان](docs/CALENDAR_AND_TIME_FA.md)، [گزارش‌ها](docs/REPORTS_AND_ANALYTICS_FA.md)، [پشتیبان‌گیری](docs/BACKUP_AND_RESTORE_FA.md)، [رفع اشکال](docs/TROUBLESHOOTING_FA.md)، [نیازمندی سیستم](docs/SYSTEM_REQUIREMENTS.md) و [یادداشت انتشار](docs/RELEASE_NOTES_0.1.0.md) آمده است.
+برای راهنمای یک‌جای نصب و استفادهٔ کارکنان، [راهنمای کارمندان (فارسی)](EMPLOYEE_GUIDE_FA.md) را ببینید. جزئیات بیشتر در راهنمای [شروع کار](docs/GETTING_STARTED_FA.md)، [مدیریت تسک](docs/TASK_MANAGEMENT_FA.md)، [تقویم و زمان](docs/CALENDAR_AND_TIME_FA.md)، [گزارش‌ها](docs/REPORTS_AND_ANALYTICS_FA.md)، [پشتیبان‌گیری](docs/BACKUP_AND_RESTORE_FA.md)، [رفع اشکال](docs/TROUBLESHOOTING_FA.md)، [نیازمندی سیستم](docs/SYSTEM_REQUIREMENTS.md) و [یادداشت انتشار](docs/RELEASE_NOTES_0.1.0.md) آمده است.
 
 ### توسعه
 

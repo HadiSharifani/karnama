@@ -4,8 +4,8 @@
 
 - **Architecture:** 64-bit x86 Windows (x64). The installer and native SQLite dependency are packaged for x64.
 - **32-bit Windows:** Not supported in v0.1.0. KARNAMA uses Electron `45.4.1`; no ia32 installer is provided.
-- **Verified acceptance environment:** Windows 10 Pro x64, build `26300.9818`.
-- **Windows 11:** The project does not publish a separately tested Windows 11 matrix for v0.1.0.
+- **Verified acceptance environment:** Windows 11 Pro x64, version 26H2, build `26300.9818` ([Microsoft release information](https://learn.microsoft.com/en-us/windows/release-health/windows11-release-information)).
+- **Windows 10:** No separate Windows 10 acceptance run is documented for v0.1.0.
 - **Internet:** Not required for core app features after installation. Opening external links can use the network through the default browser.
 - **Administrator rights:** Not required; the NSIS installer is configured per-user.
 - **Disk:** The verified installer is `134,859,300` bytes. Installed size and a minimum free-space/RAM requirement have not been formally benchmarked; user data and backups require additional space.
@@ -28,8 +28,8 @@ Run `npm ci`, then `npm run dev`. Quality commands are listed in the root [READM
 
 - **معماری:** Windows x64؛ installer و وابستگی native SQLite برای این معماری ساخته شده‌اند.
 - **Windows 32-bit:** در نسخهٔ ۰٫۱٫۰ پشتیبانی نمی‌شود. برنامه Electron نسخهٔ `45.4.1` دارد و installer ia32 ارائه نشده است.
-- **محیط آزموده‌شده:** Windows 10 Pro x64، build `26300.9818`.
-- **Windows 11:** ماتریس جداگانهٔ آزمون برای نسخهٔ ۰٫۱٫۰ منتشر نشده است.
+- **محیط آزموده‌شده:** Windows 11 Pro x64، نسخهٔ 26H2، build `26300.9818` ([اطلاعات انتشار Microsoft](https://learn.microsoft.com/en-us/windows/release-health/windows11-release-information)).
+- **Windows 10:** آزمون پذیرش جداگانه برای Windows 10 در اسناد نسخهٔ ۰٫۱٫۰ ثبت نشده است.
 - **اینترنت:** پس از نصب برای قابلیت‌های اصلی لازم نیست؛ بازکردن لینک خارجی از مرورگر پیش‌فرض ممکن است به شبکه نیاز داشته باشد.
 - **دسترسی Administrator:** لازم نیست؛ نصب‌کننده برای کاربر فعلی Windows است.
 - **فضای ذخیره‌سازی:** فایل installer تأییدشده `134,859,300` بایت است. حجم نصب‌شده و حداقل RAM/فضای خالی به‌صورت رسمی benchmark نشده‌اند؛ داده و backup فضای اضافه می‌خواهند.

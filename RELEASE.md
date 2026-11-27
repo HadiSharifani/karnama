@@ -2,19 +2,45 @@
 
 ## پذیرش و بسته انتشار v0.1.0 — 2026-11-27
 
-بسته‌بندی و پذیرش محلی نصب/حذف روی Windows تکمیل شد. هویت commitهای فعال طبق نام و ایمیل مصوب بازنویسی شد؛ tree هر چهار commit حفظ شده است. انتشار GitHub دستی است و CI هیچ push، tag یا releaseای ایجاد نمی‌کند. Installer تاریخی Phase 6 برای این بسته استفاده نشده است.
+بسته‌بندی و پذیرش محلی نصب/حذف روی Windows تکمیل شد. Author و Committer دو commit مورد تأیید به هویت Mohammad Hadi Sharifani اصلاح شدند؛ tree تمام commitهای اصلی و ترتیب والدها حفظ شده‌اند. انتشار GitHub دستی است و CI هیچ push، tag یا releaseای ایجاد نمی‌کند. Installer تاریخی Phase 6 برای این بسته استفاده نشده است.
 
 - ساخت با تنظیمات فعلی `electron-builder.yml` و خروجی مجزای `dist/v0.1.0-final/` انجام شد: `npm run package:win -- --config.directories.output=dist/v0.1.0-final`. `electron-builder` نسخهٔ `26.18.0` و Electron نسخهٔ `45.4.1` هستند؛ دریافت ابزار NSIS رسمی موردنیاز Electron Builder از GitHub موفق بود.
 - نسخهٔ `package.json` برابر `0.1.0` و مجوز MIT است. executable برنامه x64 (`PE 0x8664`)، نام محصول `کارنما`، نسخهٔ محصول `0.1.0.0` و icon تعبیه‌شده دارد. امضای Authenticode ندارد.
 - Installer تازه: `Karnama-0.1.0-win-x64.exe`، `134859300` بایت، SHA-256 برابر `2B9850032BA39D30C1BB475B55F65299C699EC3DB3D64B54564738754E196EF8`.
 - Blockmap: `Karnama-0.1.0-win-x64.exe.blockmap`، `141862` بایت، SHA-256 برابر `0087DE12CD9F16A7524CAB742475C69D36E7621BF36C859ABE60494D465CEA62`. فایل `SHA256SUMS.txt` در همان پوشه هر دو hash را ثبت می‌کند و با محاسبهٔ مجدد تطبیق داده شد.
-- نصب تمیز در مسیر ایزوله روی Windows 10 Pro x64 (build `26300.9818`) با exit code `0` انجام شد؛ executable نصب‌شده اجرا شد و سناریوهای smoke، آفلاین، گزارش‌ها، backup/restore، تنظیمات و قابلیت‌های Phase 7 را گذراندند. E2E نهایی: `7 passed, 1 skipped`. تست upgrade به‌دلیل نبود نسخهٔ عمومی قبلی برای ارتقا skip شد؛ artifact تاریخی Phase 6 جایگزین نسخهٔ قبلی نشد.
+- نصب تمیز در مسیر ایزوله روی Windows 11 Pro x64، نسخهٔ 26H2 (build `26300.9818`) با exit code `0` انجام شد؛ executable نصب‌شده اجرا شد و سناریوهای smoke، آفلاین، گزارش‌ها، backup/restore، تنظیمات و قابلیت‌های Phase 7 را گذراندند. E2E نهایی آن پذیرش: `7 passed, 1 skipped`. تست upgrade به‌دلیل نبود نسخهٔ عمومی قبلی برای ارتقا skip شد؛ artifact تاریخی Phase 6 جایگزین نسخهٔ قبلی نشد. Windows 10 جداگانه آزموده نشده است.
 - `npm test`: ۸۱ تست در ۱۲ فایل موفق؛ `npm run typecheck`، `npm run lint`، `npm run format:check` و `npm run build:app` نیز موفق شدند.
 - Uninstaller برنامه با exit code `0` اجرا شد. پوشهٔ نصب حذف شد و هر `71` فایل profile ایزوله پس از حذف باقی ماند؛ hash همهٔ فایل‌ها با وضعیت پیش از uninstall یکسان بود.
 - Installer و executable unsigned هستند؛ certificate یا timestamp پیکربندی نشده است. این محدودیت را پیش از توزیع عمومی باید در نظر گرفت.
 - تغییر معماری یا قابلیت برنامه انجام نشد و migration پایگاه‌داده لازم نبود. فایل‌های ساخت و profileهای آزمون داخل `dist/` و خارج از نسخهٔ کنترل‌شده‌اند.
 
 فایل‌های همراه بسته v0.1.0 عبارت‌اند از installer، blockmap و `SHA256SUMS.txt`. Manifest شامل SHA-256 هر دو artifact باینری است. Hashهای Phase 6 در بخش تاریخی پایین صرفاً سابقه‌اند و نباید برای این بسته استفاده شوند.
+
+## بازآزمایی نهایی برای rollout کارکنان — 2026-11-27
+
+- Windows پذیرش از روی `DisplayVersion=26H2` و build `26300.9818`، Windows 11 Pro x64 شناسایی شد؛ مقدار قدیمی `ProductName` در رجیستری «Windows 10 Pro» بود. مستندات بر اساس نسخه/build واقعی اصلاح شدند. Windows 10 جداگانه آزمایش نشده است.
+- `npm test`: ۸۱ تست از ۱۲ فایل موفق؛ `npm run typecheck`، `npm run lint`، `npm run format:check` و `npm run build:app` نیز موفق شدند.
+- `npm run package:win -- --config.directories.output=dist/qa-v0.1.0-build-20261127` با Electron Builder `26.18.0` و NSIS رسمی موفق شد. `app.asar` ساخته‌شده نسخهٔ `0.1.0` و همان SHA-256 بستهٔ اصلی را دارد: `2072DE84842E8DE11DA7BDF468B344CCBD04CF4FE943AE6015A25E690DC5302F`. Installer QA به‌دلیل تفاوت خروجی باینری با artifact انتشار جایگزین installer رسمی نشد.
+- E2E استاندارد ۵ تست موفق و ۳ مورد وابسته به متغیرهای پذیرش ایزوله را skip کرد. با نصب installer رسمی در مسیر جداگانه، دو تست نصب آفلاین/backup و Restore داده، Work Date، لینک‌ها، تصویرها و تنظیمات پس از راه‌اندازی مجدد موفق شدند. نتیجهٔ تجمیعی این بازآزمایی `7 passed, 1 skipped` است؛ تنها مورد skipشده آزمون upgrade است که به baseline اجرایی نسخهٔ پیشین نیاز دارد. آزمون مهاجرت baseline در پذیرش Phase 6 قبلاً ثبت شده، اما در این بازآزمایی دوباره اجرا نشد.
+- نصب واقعی installer رسمی exit code `0` داشت و executable نسخهٔ `0.1.0.0` اجرا شد. Uninstaller نیز exit code `0` داشت و پوشهٔ نصب را حذف کرد؛ ۷۴ فایل پروفایل آزمایشی پس از uninstall با همان SHA-256 باقی ماندند. پروفایل پیش‌فرض Windows به برنامه داده نشد و داده‌های آزمایش پس از تطبیق hash پاک شدند.
+- اجرای E2E در sandbox به‌دلیل محدودیت راه‌اندازی Electron با `0x80000003` شکست اولیه داشت؛ اجرای همان suite خارج از sandbox موفق شد. مسیرهای موقت `dist-release-audit/` و `.local-backups/` اکنون ignore هستند. پوشهٔ audit به‌علت handle باز `app.asar` توسط فرایند ChatGPT هنوز در این نشست قابل حذف فیزیکی نبود؛ چون پوشه ignore است وارد commit یا انتشار نمی‌شود.
+- Installer انتشار رسمی همچنان `134859300` بایت با SHA-256 `2B9850032BA39D30C1BB475B55F65299C699EC3DB3D64B54564738754E196EF8` است؛ blockmap `141862` بایت با SHA-256 `0087DE12CD9F16A7524CAB742475C69D36E7621BF36C859ABE60494D465CEA62` است. هر دو artifact رسمی نصب/بررسی‌شده باقی ماندند و unsigned هستند.
+
+## اصلاح انتساب Git و شناسه‌های نهایی
+
+تاریخچهٔ فعال با `git-filter-repo 2.47.0` و mailmap محدود به Author/Committer مورد تأیید بازنویسی شد. دو commitی که metadata آن‌ها اصلاح شد، محتوای یکسان دارند؛ hash فرزندان به‌دلیل parentهای جدید تغییر کرده است. برای تمام ردیف‌ها، tree و روابط والدها با نگاشت قدیم/جدید تطبیق داده شد.
+
+| Commit پیش از بازنویسی                     | Commit پس از بازنویسی                      | توضیح                               |
+| ------------------------------------------ | ------------------------------------------ | ----------------------------------- |
+| `e20f2a4e6f6ddc81e8a743c23a071c83758028d6` | `e20f2a4e6f6ddc81e8a743c23a071c83758028d6` | baseline، بدون تغییر                |
+| `e75091e5d535801dc24195eeff6c1b5fd51cda1f` | `cb1056f6bd71ebf69332908f262000d765a4c2bf` | Author/Committer اصلاح شد           |
+| `a6d9a9a4bb4a14d4c56f2c3783b321f766de1d16` | `e294f34dc7c0b86dac410199cf003c209e7c6055` | Author/Committer اصلاح شد           |
+| `f440a935d2d180c41003e95107b6c9845d60893a` | `24d89b10e73450c0318ee3df3bf671e5a32b56a5` | parent hash بازسازی شد؛ tree حفظ شد |
+| `a8be4dd16a71257610e7f7b7849d3e856e23c5a9` | `bc790891710ef1fbed2c9ff199b357413931a90e` | parent hash بازسازی شد؛ tree حفظ شد |
+| `6130fdbfebbdb079501c51e22224bfb5f144af27` | `63afc1594c7457974ec6d504c8d71bbc5a240d15` | parent hash بازسازی شد؛ tree حفظ شد |
+| `2d4265ba30d8d4de6d384faa3f3cf2d38948dec4` | `5fe43f62631ffc2d7994ff53e58af85ef0a9b6a9` | target اصلی انتشار؛ tree حفظ شد     |
+
+Tag object `v0.1.0` از `85fb8ae8c6bdb5954091152a78204d31ccbc2d20` به `5cd7b5aeebab992ea5caf566eb1e627318df9315` بازسازی شد و به commit متناظر انتشار (`5fe43f62631ffc2d7994ff53e58af85ef0a9b6a9`) اشاره می‌کند. Tag message و tagger حفظ شده‌اند. Release و assetهای دانلودی موجودند؛ پس از Push باید صفحهٔ Release و Contributors دوباره بررسی شوند.
 
 ## ساخت Windows installer
 
@@ -58,7 +84,7 @@ npm run package:win
 
 **بررسی نهایی 2026-11-24**
 
-- Windows 10 Pro x64 (build `26300.9818`)، Node.js `v24.13.0`، Electron `45.4.1`، Electron Builder `26.18.0`.
+- Windows 11 Pro x64 26H2 (build `26300.9818`)، Node.js `v24.13.0`، Electron `45.4.1`، Electron Builder `26.18.0`.
 - Typecheck، lint، format، build و ۶۹ تست واحد در ۱۰ فایل موفق شدند. Full E2E: چهار موفق و سه تست نصب‌شدهٔ env-gated؛ هر سه نیز جداگانه روی artifact نهایی موفق شدند: restore UI، smoke آفلاین، و baseline upgrade.
 - NSIS x64 نصب‌شده در پوشهٔ ایزوله اجرا شد. در حالت offline، onboarding و ساخت/اعتبارسنجی backup موفق شدند و Renderer هیچ درخواست HTTP(S) نفرستاد.
 - Restore از UI نصب‌شده با دو تسک، دو session با Work Date دستی، دو لینک، دو تصویر و شرح‌ها انجام شد. cancel دادهٔ تغییریافته را حفظ کرد؛ restore تأییدشده دادهٔ اولیه را پس از relaunch بازگرداند. SQLite `integrity_check` برابر `ok` و `foreign_key_check` خالی بود؛ اندازه و SHA-256 دو فایل با manifest backup مطابق بود. Safety backup پیش از restore ساخته و اعتبارسنجی شد؛ هیچ restore ناموفقی در UI رخ نداد. تست واحد recovery تراکنش ناقص را پوشش می‌دهد.
